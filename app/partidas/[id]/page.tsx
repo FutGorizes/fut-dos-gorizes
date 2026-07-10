@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import {
   CalendarDays,
   Clock,
@@ -22,15 +23,28 @@ import { createClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
+
 type Presenca = {
-  id: number;
+
+  id:number;
+
   jogadores: {
-    nome: string;
-    overall: number | null;
-    posicao: string | null;
-    posicao_secundaria: string | null;
+
+    nome:string;
+
+    overall:number | null;
+
+    posicao:string | null;
+
+    posicao_secundaria:string | null;
+
   };
+
 };
+
+
+
+
 
 
 
@@ -56,7 +70,9 @@ export default async function PartidaDetalhes({
 
 
 
+
   if(isNaN(partidaId)){
+
 
     return (
 
@@ -78,7 +94,7 @@ export default async function PartidaDetalhes({
 
   const {
 
-    data: partida,
+    data:partida,
 
     error
 
@@ -89,8 +105,11 @@ export default async function PartidaDetalhes({
     .select("*")
 
     .eq(
+
       "id",
+
       partidaId
+
     )
 
     .single();
@@ -102,6 +121,7 @@ export default async function PartidaDetalhes({
 
 
   if(error || !partida){
+
 
     return (
 
@@ -123,7 +143,7 @@ export default async function PartidaDetalhes({
 
   const {
 
-    data: presencas
+    data:presencas
 
   } = await supabase
 
@@ -152,10 +172,12 @@ export default async function PartidaDetalhes({
     `)
 
     .eq(
-      "partida_id",
-      partidaId
-    );
 
+      "partida_id",
+
+      partidaId
+
+    );
 
 
 
@@ -177,16 +199,14 @@ export default async function PartidaDetalhes({
 
 
 
-
   let jaConfirmado = false;
 
 
+  let jogadorIdLogado:number | null = null;
 
 
-
-
-
-  if(user){
+  let podeAvaliarPartida = false;
+    if(user){
 
 
     const {
@@ -200,8 +220,11 @@ export default async function PartidaDetalhes({
       .select("id")
 
       .eq(
+
         "usuario_id",
+
         user.id
+
       )
 
       .maybeSingle();
@@ -213,6 +236,11 @@ export default async function PartidaDetalhes({
 
 
     if(jogador){
+
+
+      jogadorIdLogado = jogador.id;
+
+
 
 
 
@@ -227,13 +255,19 @@ export default async function PartidaDetalhes({
         .select("id")
 
         .eq(
+
           "partida_id",
+
           partidaId
+
         )
 
         .eq(
+
           "jogador_id",
+
           jogador.id
+
         )
 
         .maybeSingle();
@@ -251,8 +285,103 @@ export default async function PartidaDetalhes({
     }
 
 
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+  // Libera avaliação 1 hora após o início da partida
+
+  if(jogadorIdLogado){
+
+
+    const inicioPartida = new Date(
+
+      `${partida.data}T${partida.hora}`
+
+    );
+
+
+
+
+    const liberaAvaliacao = new Date(
+
+      inicioPartida.getTime()
+
+      +
+
+      60 * 60 * 1000
+
+    );
+
+
+
+
+
+    const agora = new Date();
+
+
+
+
+
+    if(agora >= liberaAvaliacao){
+
+
+
+      const {
+
+        data:participou
+
+      } = await supabase
+
+        .from("presencas")
+
+        .select("id")
+
+        .eq(
+
+          "partida_id",
+
+          partidaId
+
+        )
+
+        .eq(
+
+          "jogador_id",
+
+          jogadorIdLogado
+
+        )
+
+        .maybeSingle();
+
+
+
+
+
+
+      podeAvaliarPartida = !!participou;
+
+
+
+    }
+
 
   }
+
+
+
+
+
 
 
 
@@ -272,20 +401,43 @@ export default async function PartidaDetalhes({
 
 
         <CardHeader className="items-center text-center">
+
         <div className="flex items-center justify-center gap-3">
+
           <span className="icon-tile">
+
             <ShieldCheck size={20} />
+
           </span>
 
+
+
           <div>
-            <p className="page-kicker text-center">Detalhes</p>
+
+            <p className="page-kicker text-center">
+
+              Detalhes
+
+            </p>
+
+
             <CardTitle className="text-center text-4xl font-black">
+
               Partida
+
             </CardTitle>
+
+
           </div>
 
+
         </div>
+
         </CardHeader>
+
+
+
+
 
         <CardContent className="space-y-8">
 
@@ -303,16 +455,24 @@ export default async function PartidaDetalhes({
 
             <CalendarDays size={18} className="text-accent" />
 
+
             {
 
               partida.data
+
               .split("-")
+
               .reverse()
+
               .join("/")
 
             }
 
+
           </p>
+
+
+
 
 
 
@@ -320,20 +480,22 @@ export default async function PartidaDetalhes({
 
           <p className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
 
+
             <Clock size={18} className="text-accent" />
+
             Horário: {partida.hora || "Não informado"}
 
+
           </p>
-
-
-
-
+          
 
 
 
           {
             partida.valor_goleiro
+
             &&
+
             (
 
               <div className="mt-4 rounded-lg border border-accent/30 bg-secondary/70 p-4 text-left">
@@ -341,10 +503,16 @@ export default async function PartidaDetalhes({
 
                 <h2 className="mb-2 flex items-center gap-2 text-xl font-black">
 
+
                   <Wallet size={20} className="text-accent" />
+
+
                   Pagamento do goleiro
 
+
                 </h2>
+
+
 
 
 
@@ -356,9 +524,14 @@ export default async function PartidaDetalhes({
 
 
 
+
+
                 {
+
                   partida.pix_goleiro
+
                   &&
+
                   (
 
                     <p>
@@ -368,6 +541,7 @@ export default async function PartidaDetalhes({
                     </p>
 
                   )
+
                 }
 
 
@@ -375,7 +549,9 @@ export default async function PartidaDetalhes({
               </div>
 
             )
+
           }
+
 
 
 
@@ -399,7 +575,9 @@ export default async function PartidaDetalhes({
 
             <p className="my-4 rounded-lg border border-border bg-secondary/70 py-4 text-5xl font-black">
 
+
               {partida.gols_a} x {partida.gols_b}
+
 
             </p>
 
@@ -449,7 +627,70 @@ export default async function PartidaDetalhes({
 
 
 
+        {
+          podeAvaliarPartida && (
+
+            <div>
+
+
+              <Button
+
+                className="
+
+                  h-12
+
+                  w-full
+
+                  bg-accent
+
+                  text-accent-foreground
+
+                  font-black
+
+                "
+
+                render={
+
+                  <Link
+
+                    href={`/partidas/${partida.id}/avaliar`}
+
+                    className="flex h-full w-full items-center justify-center gap-2"
+
+                  />
+
+                }
+
+              >
+
+
+                <Star size={20}/>
+
+
+                Avaliar jogadores
+
+
+              </Button>
+
+
+            </div>
+
+          )
+        }
+
+
+
+
+
+
+
+
+
         <Separator />
+
+
+
+
 
         <div>
 
@@ -457,13 +698,25 @@ export default async function PartidaDetalhes({
 
           <h2 className="mb-4 flex items-center gap-2 text-2xl font-black">
 
+
             <UsersRound size={22} />
+
+
             Confirmados
+
+
             <Badge variant="secondary" className="rounded-lg">
+
+
               {presencas?.length ?? 0}/14
+
+
             </Badge>
 
+
           </h2>
+
+
 
 
 
@@ -487,45 +740,66 @@ export default async function PartidaDetalhes({
                   className="bg-secondary/60"
 
                 >
+
                   <CardContent className="p-4">
 
 
 
-                  <p className="flex items-center gap-2 text-lg font-black">
-
-                    <ShieldCheck size={18} className="text-accent" />
-                    {presenca.jogadores.nome}
-
-                  </p>
+                    <p className="flex items-center gap-2 text-lg font-black">
 
 
+                      <ShieldCheck size={18} className="text-accent" />
 
 
-                  <p className="mt-2 flex items-center gap-2 text-muted-foreground">
+                      {presenca.jogadores.nome}
 
-                    <Star size={16} className="text-accent" />
-                    Overall: {presenca.jogadores.overall ?? 0}
 
-                  </p>
+                    </p>
 
 
 
 
-                  <p className="text-muted-foreground">
 
-                    {presenca.jogadores.posicao ?? "Sem posição"}
+                    <p className="mt-2 flex items-center gap-2 text-muted-foreground">
 
-                    {
-                      presenca.jogadores.posicao_secundaria
-                      &&
-                      ` | ${presenca.jogadores.posicao_secundaria}`
-                    }
 
-                  </p>
+                      <Star size={16} className="text-accent" />
+
+
+                      Overall: {presenca.jogadores.overall ?? 0}
+
+
+                    </p>
+
+
+
+
+
+                    <p className="text-muted-foreground">
+
+
+                      {presenca.jogadores.posicao ?? "Sem posição"}
+
+
+                      {
+
+
+                        presenca.jogadores.posicao_secundaria
+
+                        &&
+
+                        ` | ${presenca.jogadores.posicao_secundaria}`
+
+
+                      }
+
+
+                    </p>
 
 
 
                   </CardContent>
+
                 </Card>
 
 
@@ -550,23 +824,39 @@ export default async function PartidaDetalhes({
 
         <Separator />
 
+
+
+
+
         <div className="flex flex-col gap-3 sm:flex-row">
 
 
 
           <Button
-            className="h-10 flex-1"
-            render={
-              <Link
-                href={`/partidas/${partida.id}/editar`}
-                className="flex h-full w-full items-center justify-center"
-              />
-            }
-          >
-            <Pencil size={18} />
-            Editar
-          </Button>
 
+            className="h-10 flex-1"
+
+            render={
+
+              <Link
+
+                href={`/partidas/${partida.id}/editar`}
+
+                className="flex h-full w-full items-center justify-center"
+
+              />
+
+            }
+
+          >
+
+            <Pencil size={18} />
+
+
+            Editar
+
+
+          </Button>
 
 
 
@@ -596,7 +886,10 @@ export default async function PartidaDetalhes({
 
 
 
+
+
         </CardContent>
+
       </Card>
 
 

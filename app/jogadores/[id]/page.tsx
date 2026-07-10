@@ -16,6 +16,14 @@ import {
 
 import { supabase } from "@/lib/supabase";
 
+import { getPlayerRatingAverage } from "@/services/playerRatingService";
+import { getPlayerRatingHistory } from "@/services/playerHistoryService";
+import { calculateOverallEvolution } from "@/services/overallService";
+import { getOverallHistory } from "@/services/overallHistoryService";
+
+import PlayerRatingHistory from "@/components/PlayerRatingHistory";
+import OverallHistory from "@/components/OverallHistory";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,11 +41,18 @@ import DeletePlayerButton from "@/components/DeletePlayerButton";
 
 
 
+
+
 export default async function PerfilJogador({
+
   params,
+
 }: {
-  params: Promise<{ id: string }>;
+
+  params: Promise<{ id:string }>;
+
 }) {
+
 
 
   const { id } = await params;
@@ -47,7 +62,10 @@ export default async function PerfilJogador({
 
 
 
-  if (isNaN(jogadorId)) {
+
+
+  if(isNaN(jogadorId)){
+
 
     return (
 
@@ -66,7 +84,14 @@ export default async function PerfilJogador({
 
 
 
-  const { data: player, error } = await supabase
+
+  const {
+
+    data: player,
+
+    error,
+
+  } = await supabase
 
     .from("jogadores")
 
@@ -81,7 +106,9 @@ export default async function PerfilJogador({
 
 
 
-  if (error || !player) {
+
+  if(error || !player){
+
 
     return (
 
@@ -102,21 +129,42 @@ export default async function PerfilJogador({
 
 
 
-  const temporadaAtual = new Date().getFullYear();
+
+  const temporadaAtual =
+
+    new Date().getFullYear();
 
 
 
 
 
-  const { data: estatisticas } = await supabase
+
+
+
+
+  const { data: estatisticas } =
+
+    await supabase
 
     .from("estatisticas_jogadores")
 
     .select("*")
 
-    .eq("jogador_id", jogadorId)
+    .eq(
 
-    .eq("temporada", temporadaAtual)
+      "jogador_id",
+
+      jogadorId
+
+    )
+
+    .eq(
+
+      "temporada",
+
+      temporadaAtual
+
+    )
 
     .maybeSingle();
 
@@ -126,9 +174,74 @@ export default async function PerfilJogador({
 
 
 
-  const {
-    data: { user },
+
+  const avaliacaoComunidade =
+
+    await getPlayerRatingAverage(
+
+      jogadorId
+
+    );
+
+
+
+
+
+
+
+
+  const historicoAvaliacoes =
+
+    await getPlayerRatingHistory(
+
+      jogadorId
+
+    );
+
+
+
+
+
+
+
+
+  const historicoOverall =
+
+    await getOverallHistory(
+
+      jogadorId
+
+    );
+
+
+
+
+
+
+
+
+  const evolucaoOverall =
+
+    avaliacaoComunidade
+
+      ? calculateOverallEvolution(
+
+          player.overall,
+
+          avaliacaoComunidade.notaGeral,
+
+          avaliacaoComunidade.jogosAvaliados
+
+        )
+
+      : null;
+        const {
+
+    data:{ user },
+
   } = await supabase.auth.getUser();
+
+
 
 
 
@@ -142,16 +255,26 @@ export default async function PerfilJogador({
 
 
 
-  if (user) {
 
 
-    const { data: jogadorLogado } = await supabase
+  if(user){
+
+
+    const {data:jogadorLogado} =
+
+      await supabase
 
       .from("jogadores")
 
       .select("admin")
 
-      .eq("usuario_id", user.id)
+      .eq(
+
+        "usuario_id",
+
+        user.id
+
+      )
 
       .single();
 
@@ -160,11 +283,12 @@ export default async function PerfilJogador({
 
 
 
-    if (jogadorLogado?.admin) {
+    if(jogadorLogado?.admin){
 
       isAdmin = true;
 
     }
+
 
   }
 
@@ -183,18 +307,12 @@ export default async function PerfilJogador({
       <Card className="surface-card mx-auto max-w-xl">
 
 
-
         <CardHeader className="items-center text-center">
-
-
-
-
 
           <Avatar className="mb-2 size-32 rounded-lg after:rounded-lg">
 
 
             {player.foto_url ? (
-
 
               <AvatarImage
 
@@ -206,18 +324,13 @@ export default async function PerfilJogador({
 
               />
 
-
             ) : (
-
 
               <AvatarFallback className="rounded-lg bg-secondary text-muted-foreground">
 
-
-                <UserRound size={44} />
-
+                <UserRound size={44}/>
 
               </AvatarFallback>
-
 
             )}
 
@@ -245,7 +358,7 @@ export default async function PerfilJogador({
           <Badge className="mt-2 h-8 gap-2 rounded-lg bg-accent px-3 text-sm font-black text-accent-foreground">
 
 
-            <Star size={16} />
+            <Star size={16}/>
 
 
             Overall {player.overall}
@@ -259,13 +372,10 @@ export default async function PerfilJogador({
 
 
 
-
           <div className="mt-4 flex justify-center gap-2">
 
 
-
             {player.posicao && (
-
 
               <Badge variant="secondary">
 
@@ -273,9 +383,7 @@ export default async function PerfilJogador({
 
               </Badge>
 
-
             )}
-
 
 
 
@@ -283,16 +391,13 @@ export default async function PerfilJogador({
 
             {player.posicao_secundaria && (
 
-
               <Badge variant="secondary">
 
                 {player.posicao_secundaria}
 
               </Badge>
 
-
             )}
-
 
 
           </div>
@@ -302,7 +407,282 @@ export default async function PerfilJogador({
 
 
         </CardHeader>
-                <CardContent className="space-y-6">
+
+
+
+
+
+
+
+
+
+        <CardContent className="space-y-6">
+
+
+
+
+
+
+
+          {avaliacaoComunidade && (
+
+            <Card className="border border-border bg-secondary/30">
+
+
+              <CardHeader className="pb-3">
+
+
+                <CardTitle className="flex items-center gap-2 text-lg font-black">
+
+
+                  <Star size={20} className="text-accent"/>
+
+
+                  Avaliação da Comunidade
+
+
+                </CardTitle>
+
+
+              </CardHeader>
+
+
+
+
+
+              <CardContent className="text-center">
+
+
+                <div className="text-5xl font-black text-accent">
+
+                  {avaliacaoComunidade.notaGeral}
+
+                </div>
+
+
+
+
+
+                <p className="mt-2 text-sm text-muted-foreground">
+
+                  Baseado em {avaliacaoComunidade.jogosAvaliados} avaliações
+
+                </p>
+
+
+              </CardContent>
+
+
+
+            </Card>
+
+          )}
+
+
+
+
+
+
+
+
+
+          {evolucaoOverall && (
+
+            <Card className="border border-border bg-secondary/30">
+
+
+              <CardHeader className="pb-3">
+
+
+                <CardTitle className="flex items-center gap-2 text-lg font-black">
+
+
+                  📈 Evolução da Partida
+
+
+                </CardTitle>
+
+
+              </CardHeader>
+
+
+
+
+
+
+
+
+              <CardContent className="space-y-4 text-center">
+
+
+
+                {!evolucaoOverall.podeEvoluir ? (
+
+                  <div className="rounded-lg bg-background p-6">
+
+
+                    <p className="text-sm text-muted-foreground">
+
+
+                      Aguardando mais avaliações para calcular evolução.
+
+
+                    </p>
+
+
+                    <p className="mt-2 text-xs text-muted-foreground">
+
+
+                      Necessário: 3 avaliações
+
+
+                    </p>
+
+
+                  </div>
+
+
+                ) : (
+
+                  <>
+
+
+
+
+
+                    <div>
+
+
+                      <p className="text-xs text-muted-foreground">
+
+                        Overall antes
+
+                      </p>
+
+
+                      <strong className="text-4xl font-black">
+
+                        {evolucaoOverall.overallAntes}
+
+                      </strong>
+
+
+                    </div>
+
+
+
+
+
+                    <div className="rounded-lg bg-background p-4">
+
+
+                      <p className="text-xs text-muted-foreground">
+
+                        Nota comunidade
+
+                      </p>
+
+
+                      <strong className="text-4xl font-black text-accent">
+
+                        {evolucaoOverall.notaComunidade} ⭐
+
+                      </strong>
+
+
+                      <p className="mt-1 text-sm">
+
+                        Média de {evolucaoOverall.jogosAvaliados} avaliações
+
+                      </p>
+
+
+                    </div>
+                                        <div>
+
+
+                      <p className="text-xs text-muted-foreground">
+
+                        Overall depois
+
+                      </p>
+
+
+                      <strong className="text-4xl font-black">
+
+                        {evolucaoOverall.overallDepois}
+
+                      </strong>
+
+
+
+
+
+                      <p className="mt-1 text-sm font-bold">
+
+
+
+                        {evolucaoOverall.variacao > 0 && "⬆️"}
+
+                        {evolucaoOverall.variacao < 0 && "⬇️"}
+
+                        {" "}
+
+                        {Math.abs(evolucaoOverall.variacao)}
+
+
+
+                      </p>
+
+
+                    </div>
+
+
+
+                  </>
+
+                )}
+
+
+
+              </CardContent>
+
+
+
+            </Card>
+
+          )}
+
+
+
+
+
+
+
+
+
+          <PlayerRatingHistory
+
+            history={historicoAvaliacoes}
+
+          />
+
+
+
+
+
+
+
+
+
+          <OverallHistory
+
+            history={historicoOverall}
+
+          />
+
+
+
 
 
 
@@ -319,7 +699,7 @@ export default async function PerfilJogador({
               <CardTitle className="flex items-center gap-2 text-lg font-black">
 
 
-                <Trophy size={20} className="text-accent" />
+                <Trophy size={20} className="text-accent"/>
 
 
                 Temporada {temporadaAtual}
@@ -329,6 +709,9 @@ export default async function PerfilJogador({
 
 
             </CardHeader>
+
+
+
 
 
 
@@ -371,7 +754,6 @@ export default async function PerfilJogador({
 
 
 
-
               <div className="rounded-lg bg-background p-3 text-center">
 
 
@@ -399,6 +781,7 @@ export default async function PerfilJogador({
 
 
               </div>
+
 
 
 
@@ -435,8 +818,6 @@ export default async function PerfilJogador({
               </div>
 
 
-
-
             </CardContent>
 
 
@@ -449,275 +830,126 @@ export default async function PerfilJogador({
 
 
 
+
           <div className="space-y-4 text-sm text-muted-foreground">
 
 
 
+            {[
 
+              {
 
-            <div className="grid gap-2">
+                nome:"Chute",
 
+                valor:player.chute,
 
-              <p className="flex items-center justify-between gap-2">
+                icon:<Goal size={18} className="text-accent"/>
 
+              },
 
-                <span className="inline-flex items-center gap-2">
 
+              {
 
-                  <Goal size={18} className="text-accent" />
+                nome:"Passe",
 
+                valor:player.passe,
 
-                  Chute
+                icon:<Target size={18} className="text-accent"/>
 
+              },
 
-                </span>
 
+              {
 
+                nome:"Drible",
 
+                valor:player.drible,
 
-                <strong className="text-foreground">
+                icon:<CircleDot size={18} className="text-accent"/>
 
-                  {player.chute}
+              },
 
-                </strong>
 
+              {
 
-              </p>
+                nome:"Marcação",
 
+                valor:player.marcacao,
 
+                icon:<Shield size={18} className="text-accent"/>
 
+              },
 
 
-              <Progress
+              {
 
-                value={player.chute}
+                nome:"Físico",
 
-                className="[&_[data-slot=progress-indicator]]:bg-accent"
+                valor:player.fisico,
 
-              />
+                icon:<Dumbbell size={18} className="text-accent"/>
 
+              },
 
 
-            </div>
+            ].map((atributo)=>(
 
 
+              <div
 
+                key={atributo.nome}
 
+                className="grid gap-2"
 
+              >
 
 
+                <p className="flex items-center justify-between gap-2">
 
-            <div className="grid gap-2">
 
+                  <span className="inline-flex items-center gap-2">
 
-              <p className="flex items-center justify-between gap-2">
 
+                    {atributo.icon}
 
-                <span className="inline-flex items-center gap-2">
 
+                    {atributo.nome}
 
-                  <Target size={18} className="text-accent" />
 
+                  </span>
 
-                  Passe
 
 
-                </span>
+                  <strong className="text-foreground">
 
 
+                    {atributo.valor}
 
 
+                  </strong>
 
-                <strong className="text-foreground">
 
-                  {player.passe}
+                </p>
 
-                </strong>
 
 
-              </p>
 
 
 
 
+                <Progress
 
-              <Progress
+                  value={atributo.valor}
 
-                value={player.passe}
+                  className="[&_[data-slot=progress-indicator]]:bg-accent"
 
-                className="[&_[data-slot=progress-indicator]]:bg-accent"
+                />
 
-              />
 
+              </div>
 
 
-            </div>
-
-
-
-
-
-
-
-
-            <div className="grid gap-2">
-
-
-              <p className="flex items-center justify-between gap-2">
-
-
-                <span className="inline-flex">
-
-
-                  <CircleDot
-
-                    size={18}
-
-                    className="text-accent"
-
-                  />
-
-
-                  Drible
-
-
-                </span>
-
-
-
-
-
-                <strong className="text-foreground">
-
-                  {player.drible}
-
-                </strong>
-
-
-              </p>
-
-
-
-
-
-              <Progress
-
-                value={player.drible}
-
-                className="[&_[data-slot=progress-indicator]]:bg-accent"
-
-              />
-
-
-
-            </div>
-
-
-
-
-
-
-
-
-            <div className="grid gap-2">
-
-
-              <p className="flex items-center justify-between gap-2">
-
-
-                <span className="inline-flex items-center gap-2">
-
-
-                  <Shield size={18} className="text-accent" />
-
-
-                  Marcação
-
-
-                </span>
-
-
-
-
-
-                <strong className="text-foreground">
-
-                  {player.marcacao}
-
-                </strong>
-
-
-              </p>
-
-
-
-
-
-              <Progress
-
-                value={player.marcacao}
-
-                className="[&_[data-slot=progress-indicator]]:bg-accent"
-
-              />
-
-
-
-            </div>
-
-
-
-
-
-
-
-
-            <div className="grid gap-2">
-
-
-              <p className="flex items-center justify-between gap-2">
-
-
-                <span className="inline-flex items-center gap-2">
-
-
-                  <Dumbbell size={18} className="text-accent" />
-
-
-                  Físico
-
-
-                </span>
-
-
-
-
-
-                <strong className="text-foreground">
-
-                  {player.fisico}
-
-                </strong>
-
-
-              </p>
-
-
-
-
-
-              <Progress
-
-                value={player.fisico}
-
-                className="[&_[data-slot=progress-indicator]]:bg-accent"
-
-              />
-
-
-
-            </div>
-
+            ))}
 
 
 
@@ -732,10 +964,13 @@ export default async function PerfilJogador({
 
 
 
+
           {isAdmin && (
 
 
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+
+
 
 
 
@@ -752,13 +987,14 @@ export default async function PerfilJogador({
               >
 
 
-                <Pencil size={18} />
+                <Pencil size={18}/>
 
 
                 Editar jogador
 
 
               </Button>
+
 
 
 
@@ -782,7 +1018,7 @@ export default async function PerfilJogador({
               >
 
 
-                <Trophy size={18} />
+                <Trophy size={18}/>
 
 
                 Estatísticas
@@ -797,7 +1033,12 @@ export default async function PerfilJogador({
 
 
 
-              <DeletePlayerButton id={player.id} />
+
+              <DeletePlayerButton
+
+                id={player.id}
+
+              />
 
 
 
@@ -805,6 +1046,9 @@ export default async function PerfilJogador({
 
 
           )}
+
+
+
 
 
 
