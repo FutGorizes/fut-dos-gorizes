@@ -1,13 +1,18 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { removeBackground } from "@imgly/background-removal";
+
+import { cardTemplates, defaultCardTemplateId } from "@/lib/card-templates";
 import {
   Camera,
   Dumbbell,
   Flame,
   Goal,
+  Loader2,
   Save,
   Shield,
   Target,
@@ -39,81 +44,102 @@ const posicoes = [
 ];
 
 export default function ConfigurarJogador() {
-
   const router = useRouter();
-
   const [jogadorId, setJogadorId] = useState<number | null>(null);
-
   const [chute, setChute] = useState(0);
   const [passe, setPasse] = useState(0);
   const [drible, setDrible] = useState(0);
   const [marcacao, setMarcacao] = useState(0);
   const [fisico, setFisico] = useState(0);
-
   const [posicao, setPosicao] = useState("");
   const [posicaoSecundaria, setPosicaoSecundaria] = useState("");
-
   const [fotoUrl, setFotoUrl] = useState("");
+  const [fotoSemFundoUrl, setFotoSemFundoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [arquivoFoto, setArquivoFoto] = useState<File | null>(null);
-
+  const [cardTemplate, setCardTemplate] = useState(defaultCardTemplateId);
   const [loading, setLoading] = useState(true);
+
+  // Valores como vieram do banco, para detectar se houve alteração no form.
+  type Snapshot = {
+    chute: number;
+    passe: number;
+    drible: number;
+    marcacao: number;
+    fisico: number;
+    posicao: string;
+    posicaoSecundaria: string;
+    cardTemplate: string;
+  };
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
   function calcularOverall() {
     switch (posicao) {
       case "CA":
         return Math.round(
           chute * 0.4 +
-          drible * 0.25 +
-          passe * 0.15 +
-          fisico * 0.15 +
-          marcacao * 0.05
+            drible * 0.25 +
+            passe * 0.15 +
+            fisico * 0.15 +
+            marcacao * 0.05,
         );
 
       case "MC":
         return Math.round(
           passe * 0.35 +
-          drible * 0.25 +
-          chute * 0.2 +
-          fisico * 0.1 +
-          marcacao * 0.1
+            drible * 0.25 +
+            chute * 0.2 +
+            fisico * 0.1 +
+            marcacao * 0.1,
         );
 
       case "ZAG":
         return Math.round(
           marcacao * 0.45 +
-          fisico * 0.3 +
-          passe * 0.1 +
-          drible * 0.1 +
-          chute * 0.05
+            fisico * 0.3 +
+            passe * 0.1 +
+            drible * 0.1 +
+            chute * 0.05,
         );
 
       case "LE":
       case "LD":
         return Math.round(
           fisico * 0.25 +
-          marcacao * 0.25 +
-          passe * 0.2 +
-          drible * 0.2 +
-          chute * 0.1
+            marcacao * 0.25 +
+            passe * 0.2 +
+            drible * 0.2 +
+            chute * 0.1,
         );
 
       case "GOL":
         return Math.round(
           marcacao * 0.35 +
-          fisico * 0.3 +
-          passe * 0.2 +
-          drible * 0.1 +
-          chute * 0.05
+            fisico * 0.3 +
+            passe * 0.2 +
+            drible * 0.1 +
+            chute * 0.05,
         );
 
       default:
-        return Math.round(
-          (chute + passe + drible + marcacao + fisico) / 5
-        );
+        return Math.round((chute + passe + drible + marcacao + fisico) / 5);
     }
   }
 
   const overall = calcularOverall();
+
+  // Houve alteração se trocou a foto ou qualquer campo diverge do snapshot.
+  const alterado =
+    arquivoFoto !== null ||
+    (snapshot !== null &&
+      (chute !== snapshot.chute ||
+        passe !== snapshot.passe ||
+        drible !== snapshot.drible ||
+        marcacao !== snapshot.marcacao ||
+        fisico !== snapshot.fisico ||
+        posicao !== snapshot.posicao ||
+        posicaoSecundaria !== snapshot.posicaoSecundaria ||
+        cardTemplate !== snapshot.cardTemplate));
 
   useEffect(() => {
     async function carregarJogador() {
@@ -143,6 +169,19 @@ export default function ConfigurarJogador() {
         setPosicaoSecundaria(jogador.posicao_secundaria ?? "");
 
         setFotoUrl(jogador.foto_url ?? "");
+        setFotoSemFundoUrl(jogador.foto_sem_fundo_url ?? "");
+        setCardTemplate(jogador.card_template ?? defaultCardTemplateId);
+
+        setSnapshot({
+          chute: jogador.chute ?? 0,
+          passe: jogador.passe ?? 0,
+          drible: jogador.drible ?? 0,
+          marcacao: jogador.marcacao ?? 0,
+          fisico: jogador.fisico ?? 0,
+          posicao: jogador.posicao ?? "",
+          posicaoSecundaria: jogador.posicao_secundaria ?? "",
+          cardTemplate: jogador.card_template ?? defaultCardTemplateId,
+        });
       }
 
       setLoading(false);
@@ -152,34 +191,54 @@ export default function ConfigurarJogador() {
   }, [router]);
 
   useEffect(() => {
-    if (
-      posicao &&
-      posicao === posicaoSecundaria
-    ) {
+    if (posicao && posicao === posicaoSecundaria) {
       setPosicaoSecundaria("");
     }
   }, [posicao]);
 
-  async function uploadFoto() {
-    if (!arquivoFoto) return fotoUrl;
+  async function removerFundo(arquivo: File): Promise<Blob> {
+    const semFundo = await removeBackground(arquivo);
 
-    const extensao = arquivoFoto.name.split(".").pop();
-    const nomeArquivo = `${Date.now()}.${extensao}`;
+    if (!semFundo) return arquivo;
+    return semFundo;
+  }
 
-    const { error } = await supabase.storage
-      .from("jogadores")
-      .upload(nomeArquivo, arquivoFoto);
+  async function uploadFotos() {
+    setUploading(true);
 
-    if (error) {
-      toast.error("Erro ao enviar foto: " + error.message);
-      return fotoUrl;
+    if (!arquivoFoto) {
+      return { comFundo: fotoUrl, semFundo: fotoSemFundoUrl };
     }
 
-    const { data } = supabase.storage
-      .from("jogadores")
-      .getPublicUrl(nomeArquivo);
+    const base = `${Date.now()}`;
+    const extensao = arquivoFoto.name.split(".").pop() || "png";
+    const nomeComFundo = `${base}.${extensao}`;
+    const nomeSemFundo = `${base}-sem-fundo.png`;
 
-    return data.publicUrl;
+    const arquivoSemFundo = await removerFundo(arquivoFoto);
+
+    const [resComFundo, resSemFundo] = await Promise.all([
+      supabase.storage.from("jogadores").upload(nomeComFundo, arquivoFoto),
+      supabase.storage
+        .from("jogadores")
+        .upload(nomeSemFundo, arquivoSemFundo, { contentType: "image/png" }),
+    ]);
+
+    if (resComFundo.error || resSemFundo.error) {
+      toast.error("Oocorreu um erro ao enviar foto, tente novamente!");
+      return { comFundo: fotoUrl, semFundo: fotoSemFundoUrl };
+    }
+
+    const comFundo = supabase.storage
+      .from("jogadores")
+      .getPublicUrl(nomeComFundo).data.publicUrl;
+    const semFundo = supabase.storage
+      .from("jogadores")
+      .getPublicUrl(nomeSemFundo).data.publicUrl;
+
+    setUploading(false);
+
+    return { comFundo, semFundo };
   }
 
   async function salvar() {
@@ -187,13 +246,13 @@ export default function ConfigurarJogador() {
 
     if (posicao === posicaoSecundaria) {
       toast.error(
-        "A posição secundária deve ser diferente da posição principal."
+        "A posição secundária deve ser diferente da posição principal.",
       );
       return;
     }
 
-    const novaFotoUrl = await uploadFoto();
-        const { error } = await supabase
+    const { comFundo, semFundo } = await uploadFotos();
+    const { error } = await supabase
       .from("jogadores")
       .update({
         chute,
@@ -204,7 +263,9 @@ export default function ConfigurarJogador() {
         posicao,
         posicao_secundaria: posicaoSecundaria,
         overall,
-        foto_url: novaFotoUrl,
+        foto_url: comFundo,
+        foto_sem_fundo_url: semFundo,
+        card_template: cardTemplate,
       })
       .eq("id", jogadorId);
 
@@ -220,9 +281,7 @@ export default function ConfigurarJogador() {
   if (loading) {
     return (
       <main className="app-page">
-        <div className="content-shell text-muted-foreground">
-          Carregando...
-        </div>
+        <div className="content-shell text-muted-foreground">Carregando...</div>
       </main>
     );
   }
@@ -330,10 +389,40 @@ export default function ConfigurarJogador() {
             </Badge>
           </div>
 
+          <div className="field-stack">
+            <Label>Modelo do card</Label>
+
+            <div className="grid grid-cols-3 gap-3">
+              {cardTemplates.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => setCardTemplate(tpl.id)}
+                  aria-pressed={cardTemplate === tpl.id}
+                  className={`relative overflow-hidden rounded-lg border-2 bg-secondary/40 p-1 transition ${
+                    cardTemplate === tpl.id
+                      ? "border-accent ring-2 ring-accent/40"
+                      : "border-border hover:border-accent/60"
+                  }`}
+                >
+                  <Image
+                    src={tpl.src}
+                    alt={tpl.nome}
+                    width={160}
+                    height={224}
+                    className="h-auto w-full object-contain"
+                  />
+                  <span className="mt-1 block text-center text-xs font-semibold">
+                    {tpl.nome}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="form-grid">
             {attributeFields.map((field) => {
               const Icon = field.icon;
-
               return (
                 <div className="field-stack" key={field.id}>
                   <Label htmlFor={field.id}>
@@ -347,9 +436,7 @@ export default function ConfigurarJogador() {
                     min={0}
                     max={100}
                     value={field.value}
-                    onChange={(e) =>
-                      field.setValue(Number(e.target.value))
-                    }
+                    onChange={(e) => field.setValue(Number(e.target.value))}
                   />
                 </div>
               );
@@ -361,7 +448,7 @@ export default function ConfigurarJogador() {
 
             <Select
               value={posicao}
-              onValueChange={setPosicao}
+              onValueChange={(value) => setPosicao(value || "")}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Escolha a posição principal" />
@@ -369,10 +456,7 @@ export default function ConfigurarJogador() {
 
               <SelectContent>
                 {posicoes.map((item) => (
-                  <SelectItem
-                    key={item.value}
-                    value={item.value}
-                  >
+                  <SelectItem key={item.value} value={item.value}>
                     {item.label}
                   </SelectItem>
                 ))}
@@ -385,7 +469,7 @@ export default function ConfigurarJogador() {
 
             <Select
               value={posicaoSecundaria}
-              onValueChange={setPosicaoSecundaria}
+              onValueChange={(value) => setPosicaoSecundaria(value || "")}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Escolha a posição secundária" />
@@ -393,28 +477,29 @@ export default function ConfigurarJogador() {
 
               <SelectContent>
                 {posicoes
-                  .filter(
-                    (item) => item.value !== posicao
-                  )
+                  .filter((item) => item.value !== posicao)
                   .map((item) => (
-                    <SelectItem
-                      key={item.value}
-                      value={item.value}
-                    >
+                    <SelectItem key={item.value} value={item.value}>
                       {item.label}
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
           </div>
-
-          <Button
-            className="h-10 w-full"
-            onClick={salvar}
-          >
-            <Save size={18} />
-            Salvar Jogador
-          </Button>
+          {alterado && (
+            <Button
+              className="h-10 w-full"
+              onClick={salvar}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Save size={18} />
+              )}
+              {uploading ? " Salvando" : " Salvar"} Jogador
+            </Button>
+          )}
         </CardContent>
       </Card>
     </main>
