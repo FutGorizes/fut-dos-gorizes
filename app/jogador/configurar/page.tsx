@@ -38,15 +38,11 @@ const posicoes = [
   { value: "CA", label: "Centroavante" },
 ];
 
-
 export default function ConfigurarJogador() {
-
 
   const router = useRouter();
 
-
   const [jogadorId, setJogadorId] = useState<number | null>(null);
-
 
   const [chute, setChute] = useState(0);
   const [passe, setPasse] = useState(0);
@@ -54,150 +50,88 @@ export default function ConfigurarJogador() {
   const [marcacao, setMarcacao] = useState(0);
   const [fisico, setFisico] = useState(0);
 
-
   const [posicao, setPosicao] = useState("");
   const [posicaoSecundaria, setPosicaoSecundaria] = useState("");
-
 
   const [fotoUrl, setFotoUrl] = useState("");
   const [arquivoFoto, setArquivoFoto] = useState<File | null>(null);
 
-
   const [loading, setLoading] = useState(true);
 
-
-
-
   function calcularOverall() {
-
-
-    switch(posicao){
-
-
+    switch (posicao) {
       case "CA":
-
         return Math.round(
-          (chute * 0.40) +
-          (drible * 0.25) +
-          (passe * 0.15) +
-          (fisico * 0.15) +
-          (marcacao * 0.05)
+          chute * 0.4 +
+          drible * 0.25 +
+          passe * 0.15 +
+          fisico * 0.15 +
+          marcacao * 0.05
         );
-
-
 
       case "MC":
-
         return Math.round(
-          (passe * 0.35) +
-          (drible * 0.25) +
-          (chute * 0.20) +
-          (fisico * 0.10) +
-          (marcacao * 0.10)
+          passe * 0.35 +
+          drible * 0.25 +
+          chute * 0.2 +
+          fisico * 0.1 +
+          marcacao * 0.1
         );
-
-
 
       case "ZAG":
-
         return Math.round(
-          (marcacao * 0.45) +
-          (fisico * 0.30) +
-          (passe * 0.10) +
-          (drible * 0.10) +
-          (chute * 0.05)
+          marcacao * 0.45 +
+          fisico * 0.3 +
+          passe * 0.1 +
+          drible * 0.1 +
+          chute * 0.05
         );
-
-
 
       case "LE":
       case "LD":
-
         return Math.round(
-          (fisico * 0.25) +
-          (marcacao * 0.25) +
-          (passe * 0.20) +
-          (drible * 0.20) +
-          (chute * 0.10)
+          fisico * 0.25 +
+          marcacao * 0.25 +
+          passe * 0.2 +
+          drible * 0.2 +
+          chute * 0.1
         );
-
-
 
       case "GOL":
-
         return Math.round(
-          (marcacao * 0.35) +
-          (fisico * 0.30) +
-          (passe * 0.20) +
-          (drible * 0.10) +
-          (chute * 0.05)
+          marcacao * 0.35 +
+          fisico * 0.3 +
+          passe * 0.2 +
+          drible * 0.1 +
+          chute * 0.05
         );
-
-
 
       default:
-
         return Math.round(
-          (
-            chute +
-            passe +
-            drible +
-            marcacao +
-            fisico
-          ) / 5
+          (chute + passe + drible + marcacao + fisico) / 5
         );
-
-
     }
-
-
   }
-
-
 
   const overall = calcularOverall();
 
-
-
-
-
-
   useEffect(() => {
-
-
     async function carregarJogador() {
-
-
       const { data } = await supabase.auth.getUser();
 
-
-
       if (!data.user) {
-
         router.push("/login");
-
         return;
-
       }
-
-
 
       const { data: jogador } = await supabase
         .from("jogadores")
         .select("*")
-        .eq(
-          "usuario_id",
-          data.user.id
-        )
+        .eq("usuario_id", data.user.id)
         .single();
 
-
-
       if (jogador) {
-
-
         setJogadorId(jogador.id);
-
 
         setChute(jogador.chute ?? 0);
         setPasse(jogador.passe ?? 0);
@@ -205,165 +139,92 @@ export default function ConfigurarJogador() {
         setMarcacao(jogador.marcacao ?? 0);
         setFisico(jogador.fisico ?? 0);
 
+        setPosicao(jogador.posicao ?? "");
+        setPosicaoSecundaria(jogador.posicao_secundaria ?? "");
 
-        setPosicao(
-          jogador.posicao ?? ""
-        );
-
-
-        setPosicaoSecundaria(
-          jogador.posicao_secundaria ?? ""
-        );
-
-
-        setFotoUrl(
-          jogador.foto_url ?? ""
-        );
-
-
+        setFotoUrl(jogador.foto_url ?? "");
       }
 
-
       setLoading(false);
-
-
     }
-
 
     carregarJogador();
-
-
   }, [router]);
 
-
-
-
-
+  useEffect(() => {
+    if (
+      posicao &&
+      posicao === posicaoSecundaria
+    ) {
+      setPosicaoSecundaria("");
+    }
+  }, [posicao]);
 
   async function uploadFoto() {
-
-
-    if(!arquivoFoto) {
-
-      return fotoUrl;
-
-    }
-
-
+    if (!arquivoFoto) return fotoUrl;
 
     const extensao = arquivoFoto.name.split(".").pop();
-
-
-
-    const nomeArquivo =
-      `${Date.now()}.${extensao}`;
-
-
+    const nomeArquivo = `${Date.now()}.${extensao}`;
 
     const { error } = await supabase.storage
       .from("jogadores")
-      .upload(
-        nomeArquivo,
-        arquivoFoto
-      );
+      .upload(nomeArquivo, arquivoFoto);
 
-
-
-    if(error){
-
+    if (error) {
       toast.error("Erro ao enviar foto: " + error.message);
-
       return fotoUrl;
-
     }
 
-
-
-
-    const { data } =
-      supabase.storage
+    const { data } = supabase.storage
       .from("jogadores")
       .getPublicUrl(nomeArquivo);
 
-
-
     return data.publicUrl;
-
-
   }
-    async function salvar() {
 
-
+  async function salvar() {
     if (!jogadorId) return;
 
-
+    if (posicao === posicaoSecundaria) {
+      toast.error(
+        "A posição secundária deve ser diferente da posição principal."
+      );
+      return;
+    }
 
     const novaFotoUrl = await uploadFoto();
-
-
-
-    const { error } = await supabase
+        const { error } = await supabase
       .from("jogadores")
       .update({
-
         chute,
         passe,
         drible,
         marcacao,
         fisico,
-
         posicao,
-
-        posicao_secundaria:
-          posicaoSecundaria,
-
+        posicao_secundaria: posicaoSecundaria,
         overall,
-
-        foto_url:
-          novaFotoUrl,
-
+        foto_url: novaFotoUrl,
       })
-      .eq(
-        "id",
-        jogadorId
-      );
+      .eq("id", jogadorId);
 
-
-
-    if(error){
-
+    if (error) {
       toast.error(error.message);
-
       return;
-
     }
 
-
-
     toast.success(`Jogador atualizado. Overall: ${overall}`);
-
-
     router.push("/");
-
-
   }
 
-
-
-
-
-
-
-  if(loading){
-
+  if (loading) {
     return (
       <main className="app-page">
         <div className="content-shell text-muted-foreground">
           Carregando...
         </div>
       </main>
-    )
-
+    );
   }
 
   const attributeFields = [
@@ -412,6 +273,7 @@ export default function ConfigurarJogador() {
             <span className="icon-tile">
               <UserRound size={20} />
             </span>
+
             <div>
               <p className="page-kicker">Meu perfil</p>
               <CardTitle className="font-heading text-3xl font-black">
@@ -443,15 +305,16 @@ export default function ConfigurarJogador() {
               <Camera size={16} />
               Escolher arquivo
             </Label>
+
             <Input
               id="foto"
               type="file"
               accept="image/*"
               className="sr-only"
-              onChange={(e)=>{
+              onChange={(e) => {
                 const arquivo = e.target.files?.[0];
 
-                if(arquivo){
+                if (arquivo) {
                   setArquivoFoto(arquivo);
                   setFotoUrl(URL.createObjectURL(arquivo));
                 }
@@ -461,7 +324,8 @@ export default function ConfigurarJogador() {
 
           <div className="rounded-lg border border-accent/40 bg-[#111111] p-4 text-center text-white">
             <p className="text-sm text-white/60">Overall</p>
-            <Badge className="mt-2 h-auto rounded-lg bg-accent px-4 py-2 text-5xl font-black text-accent-foreground hover:bg-accent">
+
+            <Badge className="mt-2 h-auto rounded-lg bg-accent px-4 py-2 text-5xl font-black text-accent-foreground">
               {overall}
             </Badge>
           </div>
@@ -476,13 +340,16 @@ export default function ConfigurarJogador() {
                     <Icon size={16} className="text-accent" />
                     {field.label}
                   </Label>
+
                   <Input
                     id={field.id}
                     type="number"
                     min={0}
                     max={100}
                     value={field.value}
-                    onChange={(e)=> field.setValue(Number(e.target.value))}
+                    onChange={(e) =>
+                      field.setValue(Number(e.target.value))
+                    }
                   />
                 </div>
               );
@@ -491,14 +358,22 @@ export default function ConfigurarJogador() {
 
           <div className="field-stack">
             <Label>Posição principal</Label>
-            <Select value={posicao || null} onValueChange={(value) => setPosicao(value ?? "")}>
-              <SelectTrigger className="h-10 w-full bg-card">
+
+            <Select
+              value={posicao}
+              onValueChange={setPosicao}
+            >
+              <SelectTrigger>
                 <SelectValue placeholder="Escolha a posição principal" />
               </SelectTrigger>
+
               <SelectContent>
-                {posicoes.map((posicaoItem) => (
-                  <SelectItem key={posicaoItem.value} value={posicaoItem.value}>
-                    {posicaoItem.label}
+                {posicoes.map((item) => (
+                  <SelectItem
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -507,22 +382,34 @@ export default function ConfigurarJogador() {
 
           <div className="field-stack">
             <Label>Posição secundária</Label>
-            <Select value={posicaoSecundaria || null} onValueChange={(value) => setPosicaoSecundaria(value ?? "")}>
-              <SelectTrigger className="h-10 w-full bg-card">
+
+            <Select
+              value={posicaoSecundaria}
+              onValueChange={setPosicaoSecundaria}
+            >
+              <SelectTrigger>
                 <SelectValue placeholder="Escolha a posição secundária" />
               </SelectTrigger>
+
               <SelectContent>
-                {posicoes.map((posicaoItem) => (
-                  <SelectItem key={posicaoItem.value} value={posicaoItem.value}>
-                    {posicaoItem.label}
-                  </SelectItem>
-                ))}
+                {posicoes
+                  .filter(
+                    (item) => item.value !== posicao
+                  )
+                  .map((item) => (
+                    <SelectItem
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
 
           <Button
-            className="h-10 w-full cursor-pointer"
+            className="h-10 w-full"
             onClick={salvar}
           >
             <Save size={18} />
@@ -532,5 +419,4 @@ export default function ConfigurarJogador() {
       </Card>
     </main>
   );
-
 }
