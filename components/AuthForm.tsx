@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { AlertCircle, LogIn, UserPlus } from "lucide-react";
+import { AlertCircle, CheckCircle2, LogIn, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -27,6 +27,7 @@ export default function AuthForm({
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [aviso, setAviso] = useState("");
   const [carregando, setCarregando] = useState(false);
 
   const isLogin = mode === "login";
@@ -35,33 +36,45 @@ export default function AuthForm({
     if (novo === mode) return;
     setMode(novo);
     setErro("");
+    setAviso("");
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (carregando) return;
+  async function fazerLogin() {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha,
+    });
 
-    setErro("");
-    setCarregando(true);
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: senha,
-      });
-
-      if (error) {
-        setErro(error.message);
-        setCarregando(false);
-        return;
-      }
-
-      router.push("/");
-      router.refresh();
+    if (error) {
+      setErro(error.message);
+      setCarregando(false);
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    // Conta precisa estar aprovada por um admin.
+    const { data: solicitacao } = await supabase
+      .from("solicitacoes_cadastro")
+      .select("status")
+      .eq("usuario_id", data.user.id)
+      .maybeSingle();
+
+    if (solicitacao?.status === "pendente" || solicitacao?.status === "rejeitado") {
+      await supabase.auth.signOut();
+      setCarregando(false);
+      setErro(
+        solicitacao.status === "pendente"
+          ? "Seu cadastro ainda está em análise. Aguarde a aprovação de um admin."
+          : "Seu cadastro não foi aprovado. Fale com um admin.",
+      );
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
+  }
+
+  async function fazerCadastro() {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
       options: { data: { nome } },
@@ -73,8 +86,43 @@ export default function AuthForm({
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    // Registra a solicitação pendente (RLS: só a própria).
+    if (data.user) {
+      const { error: solErro } = await supabase
+        .from("solicitacoes_cadastro")
+        .insert({ usuario_id: data.user.id, nome, email });
+
+      if (solErro) {
+        setErro("Erro ao registrar a solicitação: " + solErro.message);
+        setCarregando(false);
+        return;
+      }
+    }
+
+    // Não deixa entrar; some com a sessão e volta pro modo login com o aviso.
+    await supabase.auth.signOut();
+    setCarregando(false);
+    setMode("login");
+    setSenha("");
+    setNome("");
+    setAviso(
+      "Cadastro enviado! Sua conta será liberada após a aprovação de um admin.",
+    );
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (carregando) return;
+
+    setErro("");
+    setAviso("");
+    setCarregando(true);
+
+    if (isLogin) {
+      await fazerLogin();
+    } else {
+      await fazerCadastro();
+    }
   }
 
   return (
@@ -115,6 +163,14 @@ export default function AuthForm({
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
+          {aviso && (
+            <Alert>
+              <CheckCircle2 />
+              <AlertTitle>Solicitação enviada</AlertTitle>
+              <AlertDescription>{aviso}</AlertDescription>
+            </Alert>
+          )}
+
           {erro && (
             <Alert variant="destructive">
               <AlertCircle />

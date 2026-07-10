@@ -47,13 +47,8 @@ export async function updatePlayer(id: string, player: Player) {
 
   const resposta = await res.json();
 
-  console.log("STATUS UPDATE:", res.status);
-  console.log("RESPOSTA UPDATE:", resposta);
-
   if (!res.ok) {
-    throw new Error(
-      resposta.error || "Erro ao atualizar jogador"
-    );
+    throw new Error(resposta.error || "Erro ao atualizar jogador");
   }
 
   return resposta;

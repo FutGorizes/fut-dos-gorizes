@@ -53,9 +53,31 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Logado tentando ver login/cadastro -> manda pra dentro do app.
-  if (user && rotaDeAuth) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (user) {
+    // Conta precisa estar aprovada. Usuários antigos não têm solicitação
+    // (null) e são tratados como já aprovados.
+    const { data: solicitacao } = await supabase
+      .from("solicitacoes_cadastro")
+      .select("status")
+      .eq("usuario_id", user.id)
+      .maybeSingle();
+
+    const bloqueado =
+      solicitacao?.status === "pendente" ||
+      solicitacao?.status === "rejeitado";
+
+    if (bloqueado) {
+      // Só pode ver as telas de auth (onde aparece a mensagem de espera).
+      if (!rotaDeAuth) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+      return response;
+    }
+
+    // Aprovado tentando ver login/cadastro -> manda pra dentro do app.
+    if (rotaDeAuth) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return response;

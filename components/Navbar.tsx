@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  ShieldCheck,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -27,7 +28,15 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  requiresAuth?: boolean;
+  requiresAdmin?: boolean;
+};
+
+const navItems: NavItem[] = [
   {
     href: "/",
     label: "Dashboard",
@@ -54,6 +63,12 @@ const navItems = [
     label: "Ranking",
     icon: BarChart3,
   },
+  {
+    href: "/admin/solicitacoes",
+    label: "Solicitações",
+    icon: ShieldCheck,
+    requiresAdmin: true,
+  },
 ];
 
 
@@ -69,6 +84,7 @@ export default function Navbar({
   // Estado inicial vem do servidor (via layout) para não piscar em páginas logadas.
   const [usuario, setUsuario] = useState<string | null>(initialUserId);
   const [nome, setNome] = useState("");
+  const [admin, setAdmin] = useState(false);
 
 
 
@@ -88,7 +104,7 @@ export default function Navbar({
 
         const { data: jogador } = await supabase
           .from("jogadores")
-          .select("nome")
+          .select("nome, admin")
           .eq("usuario_id", data.user.id)
           .single();
 
@@ -97,6 +113,7 @@ export default function Navbar({
         if(jogador){
 
           setNome(jogador.nome);
+          setAdmin(jogador.admin === true);
 
         }
 
@@ -125,7 +142,7 @@ export default function Navbar({
 
           const { data: jogador } = await supabase
             .from("jogadores")
-            .select("nome")
+            .select("nome, admin")
             .eq("usuario_id", session.user.id)
             .single();
 
@@ -134,6 +151,7 @@ export default function Navbar({
           if(jogador){
 
             setNome(jogador.nome);
+            setAdmin(jogador.admin === true);
 
           }
 
@@ -141,6 +159,7 @@ export default function Navbar({
         } else {
 
           setNome("");
+          setAdmin(false);
 
         }
 
@@ -178,7 +197,10 @@ export default function Navbar({
   // Sem usuário logado, não mostra o header (esconde na hora ao deslogar).
   if (!usuario) return null;
 
-  const visibleNavItems = navItems.filter((item) => !item.requiresAuth || usuario);
+  const visibleNavItems = navItems.filter(
+    (item) =>
+      (!item.requiresAuth || usuario) && (!item.requiresAdmin || admin),
+  );
 
   const linkClassName = (href: string) =>
     cn(

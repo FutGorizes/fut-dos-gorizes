@@ -31,7 +31,6 @@ export async function getCurrentPlayer() {
 
 export async function isAdmin() {
   const jogador = await getCurrentPlayer();
-
   return jogador?.admin === true;
 }
 
