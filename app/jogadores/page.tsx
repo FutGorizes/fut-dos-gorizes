@@ -13,8 +13,8 @@ export default async function Jogadores() {
     console.log("ERRO SUPABASE:", JSON.stringify(error, null, 2));
   }
 
-  const admin = true;
-  // await isAdmin();
+  // const admin = true; --> so p debug
+  const admin = await isAdmin();
 
   console.log("PLAYERS:", players);
   console.log("É ADMIN:", admin);
