@@ -1,7 +1,5 @@
+import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
-
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentPlayer } from "@/lib/supabase/auth";
 
 
 // ===============================
@@ -24,43 +22,38 @@ export async function GET(
       );
     }
 
-    const supabase = await createClient();
-
     const { data, error } = await supabase
       .from("jogadores")
       .select("*")
       .eq("id", jogadorId)
       .single();
 
-
     if (error) {
+      console.error("❌ Erro ao buscar jogador:", error);
+
       return NextResponse.json(
         {
           error: error.message,
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-
     return NextResponse.json(data);
 
-
-  } catch (err: any) {
-
+  } catch (err: unknown) {
     console.error("🔥 Erro GET:", err);
+
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,
       }
     );
-
   }
 }
 
@@ -74,97 +67,22 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-
   try {
-
     const { id } = await params;
 
     const jogadorId = Number(id);
 
-
     if (isNaN(jogadorId)) {
-
       return NextResponse.json(
-        {
-          error: "ID inválido",
-        },
-        {
-          status: 400,
-        }
+        { error: "ID inválido" },
+        { status: 400 }
       );
-
     }
-
-
-    const jogadorLogado = await getCurrentPlayer();
-
-
-    if (!jogadorLogado) {
-
-      return NextResponse.json(
-        {
-          error: "Usuário não autenticado",
-        },
-        {
-          status: 401,
-        }
-      );
-
-    }
-
-
-
-    const supabase = await createClient();
-
-
-
-    const { data: jogadorAlvo } = await supabase
-      .from("jogadores")
-      .select("usuario_id")
-      .eq("id", jogadorId)
-      .single();
-
-
-
-    if (!jogadorAlvo) {
-
-      return NextResponse.json(
-        {
-          error: "Jogador não encontrado",
-        },
-        {
-          status: 404,
-        }
-      );
-
-    }
-
-
-
-    const podeEditar =
-      jogadorLogado.admin ||
-      jogadorLogado.usuario_id === jogadorAlvo.usuario_id;
-
-
-
-    if (!podeEditar) {
-
-      return NextResponse.json(
-        {
-          error: "Sem permissão",
-        },
-        {
-          status: 403,
-        }
-      );
-
-    }
-
-
 
     const body = await request.json();
 
-
+    console.log("🟡 Atualizando jogador:", jogadorId);
+    console.log("Dados:", body);
 
     const { data, error } = await supabase
       .from("jogadores")
@@ -173,45 +91,34 @@ export async function PUT(
       .select()
       .single();
 
-
-
     if (error) {
+      console.error("❌ Erro Supabase:", error);
 
       return NextResponse.json(
         {
           error: error.message,
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
-
     }
-
-
 
     return NextResponse.json(data);
 
-
-
-  } catch (err: any) {
-
+  } catch (err: unknown) {
     console.error("🔥 Erro PUT:", err);
 
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,
       }
     );
-
   }
-
 }
-
 
 
 
@@ -223,97 +130,19 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-
   try {
-
-
     const { id } = await params;
 
     const jogadorId = Number(id);
 
-
-
     if (isNaN(jogadorId)) {
-
       return NextResponse.json(
-        {
-          error: "ID inválido",
-        },
-        {
-          status: 400,
-        }
+        { error: "ID inválido" },
+        { status: 400 }
       );
-
     }
 
-
-
-    const jogadorLogado = await getCurrentPlayer();
-
-
-
-    if (!jogadorLogado) {
-
-      return NextResponse.json(
-        {
-          error: "Usuário não autenticado",
-        },
-        {
-          status: 401,
-        }
-      );
-
-    }
-
-
-
-    const supabase = await createClient();
-
-
-
-    const { data: jogadorAlvo } = await supabase
-      .from("jogadores")
-      .select("usuario_id")
-      .eq("id", jogadorId)
-      .single();
-
-
-
-    if (!jogadorAlvo) {
-
-      return NextResponse.json(
-        {
-          error: "Jogador não encontrado",
-        },
-        {
-          status: 404,
-        }
-      );
-
-    }
-
-
-
-    const podeExcluir =
-      jogadorLogado.admin ||
-      jogadorLogado.usuario_id === jogadorAlvo.usuario_id;
-
-
-
-    if (!podeExcluir) {
-
-      return NextResponse.json(
-        {
-          error: "Sem permissão",
-        },
-        {
-          status: 403,
-        }
-      );
-
-    }
-
-
+    console.log("🟡 Deletando jogador:", jogadorId);
 
     const { data, error } = await supabase
       .from("jogadores")
@@ -321,48 +150,34 @@ export async function DELETE(
       .eq("id", jogadorId)
       .select();
 
-
-
     if (error) {
+      console.error("❌ Erro Supabase:", error);
 
       return NextResponse.json(
         {
           error: error.message,
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
-
     }
 
-
-
     return NextResponse.json({
-
-      message:
-        "Jogador deletado com sucesso!",
-
+      message: "Jogador deletado com sucesso!",
       jogador: data,
-
     });
 
-
-
-  } catch (err: any) {
-
+  } catch (err: unknown) {
     console.error("🔥 Erro DELETE:", err);
 
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,
       }
     );
-
   }
-
 }
