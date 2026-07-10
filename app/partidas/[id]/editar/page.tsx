@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
+import { supabase } from "@/lib/supabase";
+
 
 export default function EditarPartida() {
 
@@ -33,6 +35,74 @@ export default function EditarPartida() {
 
   const [loading, setLoading] = useState(true);
 
+  const [verificandoPermissao, setVerificandoPermissao] = useState(true);
+
+
+
+  useEffect(() => {
+
+
+    async function verificarPermissao() {
+
+
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
+
+
+
+      if (!user) {
+
+        toast.error("Usuário não autenticado");
+
+        router.push(`/partidas/${id}`);
+
+        return;
+
+      }
+
+
+
+      const {
+        data: jogador,
+        error
+      } = await supabase
+        .from("jogadores")
+        .select("admin")
+        .eq("usuario_id", user.id)
+        .single();
+
+
+
+      if (error || !jogador?.admin) {
+
+        toast.error("Acesso permitido apenas para administradores");
+
+        router.push(`/partidas/${id}`);
+
+        return;
+
+      }
+
+
+
+      setVerificandoPermissao(false);
+
+
+    }
+
+
+
+    if (id) {
+
+      verificarPermissao();
+
+    }
+
+
+  }, [id, router]);
 
 
 
@@ -50,6 +120,7 @@ export default function EditarPartida() {
       if (!response.ok) {
 
         toast.error("Erro ao buscar partida");
+
         return;
 
       }
@@ -67,8 +138,7 @@ export default function EditarPartida() {
       setTimeB(partida.time_b);
       setGolsA(String(partida.gols_a));
       setGolsB(String(partida.gols_b));
-
-      setPixGoleiro(partida.pix_goleiro || "");
+            setPixGoleiro(partida.pix_goleiro || "");
 
       setValorGoleiro(
         String(partida.valor_goleiro || "")
@@ -82,17 +152,14 @@ export default function EditarPartida() {
 
 
 
-    if (id) {
+    if (id && !verificandoPermissao) {
 
       carregarPartida();
 
     }
 
 
-  }, [id]);
-
-
-
+  }, [id, verificandoPermissao]);
 
 
 
@@ -144,6 +211,7 @@ export default function EditarPartida() {
     if (!response.ok) {
 
       toast.error("Erro ao editar partida");
+
       return;
 
     }
@@ -151,6 +219,7 @@ export default function EditarPartida() {
 
 
     toast.success("Partida atualizada");
+
 
     router.push(`/partidas/${id}`);
 
@@ -165,7 +234,7 @@ export default function EditarPartida() {
 
 
 
-  if (loading) {
+  if (loading || verificandoPermissao) {
 
     return (
 
@@ -192,15 +261,29 @@ export default function EditarPartida() {
 
 
         <div className="mb-8 flex items-center justify-center gap-3">
+
           <span className="icon-tile">
+
             <Pencil size={20} />
+
           </span>
+
+
           <div>
-            <p className="page-kicker">Agenda</p>
+
+            <p className="page-kicker">
+              Agenda
+            </p>
+
+
             <h1 className="text-3xl font-black">
               Editar Partida
             </h1>
+
+
           </div>
+
+
         </div>
 
 
@@ -212,127 +295,159 @@ export default function EditarPartida() {
 
 
           <div className="field-stack">
-          <Label htmlFor="data">Data</Label>
-          <Input
-            id="data"
 
-            type="date"
-
-            value={data}
-
-            onChange={(e) =>
-              setData(e.target.value)
-            }
-
-          />
-          </div>
+            <Label htmlFor="data">
+              Data
+            </Label>
 
 
-
-
-
-          <div className="field-stack">
-          <Label htmlFor="hora">Horário</Label>
-          <Input
-            id="hora"
-
-            type="time"
-
-            value={hora}
-
-            onChange={(e) =>
-              setHora(e.target.value)
-            }
-
-          />
-          </div>
-
-
-
-
-
-
-          <div className="field-stack">
-          <Label htmlFor="local">Local</Label>
-          <Input
-            id="local"
-
-            placeholder="Local da partida"
-
-            value={local}
-
-            onChange={(e) =>
-              setLocal(e.target.value)
-            }
-
-          />
-          </div>
-
-
-
-
-
-
-          <div className="field-stack">
-          <Label htmlFor="time-a">Time A</Label>
-          <Input
-            id="time-a"
-
-            placeholder="Time A"
-
-            value={timeA}
-
-            onChange={(e) =>
-              setTimeA(e.target.value)
-            }
-
-          />
-          </div>
-
-
-
-
-
-
-          <div className="field-stack">
-          <Label htmlFor="time-b">Time B</Label>
-          <Input
-            id="time-b"
-
-            placeholder="Time B"
-
-            value={timeB}
-
-            onChange={(e) =>
-              setTimeB(e.target.value)
-            }
-
-          />
-          </div>
-
-
-
-
-
-
-          <div className="grid grid-cols-2 gap-4">
-
-
-
-            <div className="field-stack">
-            <Label htmlFor="gols-a">Gols A</Label>
             <Input
-              id="gols-a"
 
-              type="number"
+              id="data"
 
-              value={golsA}
+              type="date"
+
+              value={data}
 
               onChange={(e) =>
-                setGolsA(e.target.value)
+                setData(e.target.value)
               }
 
             />
+
+          </div>
+
+
+
+
+
+          <div className="field-stack">
+
+            <Label htmlFor="hora">
+              Horário
+            </Label>
+
+
+            <Input
+
+              id="hora"
+
+              type="time"
+
+              value={hora}
+
+              onChange={(e) =>
+                setHora(e.target.value)
+              }
+
+            />
+
+          </div>
+
+
+
+
+
+          <div className="field-stack">
+
+            <Label htmlFor="local">
+              Local
+            </Label>
+
+
+            <Input
+
+              id="local"
+
+              placeholder="Local da partida"
+
+              value={local}
+
+              onChange={(e) =>
+                setLocal(e.target.value)
+              }
+
+            />
+
+          </div>
+
+
+
+
+
+          <div className="field-stack">
+
+            <Label htmlFor="time-a">
+              Time A
+            </Label>
+
+
+            <Input
+
+              id="time-a"
+
+              placeholder="Time A"
+
+              value={timeA}
+
+              onChange={(e) =>
+                setTimeA(e.target.value)
+              }
+
+            />
+
+          </div>
+
+
+
+
+
+          <div className="field-stack">
+
+            <Label htmlFor="time-b">
+              Time B
+            </Label>
+
+
+            <Input
+
+              id="time-b"
+
+              placeholder="Time B"
+
+              value={timeB}
+
+              onChange={(e) =>
+                setTimeB(e.target.value)
+              }
+
+            />
+
+          </div>
+                    <div className="grid grid-cols-2 gap-4">
+
+
+            <div className="field-stack">
+
+              <Label htmlFor="gols-a">
+                Gols A
+              </Label>
+
+
+              <Input
+
+                id="gols-a"
+
+                type="number"
+
+                value={golsA}
+
+                onChange={(e) =>
+                  setGolsA(e.target.value)
+                }
+
+              />
+
             </div>
 
 
@@ -340,24 +455,31 @@ export default function EditarPartida() {
 
 
             <div className="field-stack">
-            <Label htmlFor="gols-b">Gols B</Label>
-            <Input
-              id="gols-b"
 
-              type="number"
+              <Label htmlFor="gols-b">
+                Gols B
+              </Label>
 
-              value={golsB}
 
-              onChange={(e) =>
-                setGolsB(e.target.value)
-              }
+              <Input
 
-            />
+                id="gols-b"
+
+                type="number"
+
+                value={golsB}
+
+                onChange={(e) =>
+                  setGolsB(e.target.value)
+                }
+
+              />
+
             </div>
 
 
-
           </div>
+
 
 
 
@@ -366,20 +488,29 @@ export default function EditarPartida() {
 
 
           <div className="field-stack">
-          <Label htmlFor="pix-goleiro">Pix do goleiro</Label>
-          <Input
-            id="pix-goleiro"
 
-            placeholder="Pix do goleiro"
+            <Label htmlFor="pix-goleiro">
+              Pix do goleiro
+            </Label>
 
-            value={pixGoleiro}
 
-            onChange={(e) =>
-              setPixGoleiro(e.target.value)
-            }
+            <Input
 
-          />
+              id="pix-goleiro"
+
+              placeholder="Pix do goleiro"
+
+              value={pixGoleiro}
+
+              onChange={(e) =>
+                setPixGoleiro(e.target.value)
+              }
+
+            />
+
           </div>
+
+
 
 
 
@@ -387,22 +518,30 @@ export default function EditarPartida() {
 
 
           <div className="field-stack">
-          <Label htmlFor="valor-goleiro">Valor do goleiro</Label>
-          <Input
-            id="valor-goleiro"
 
-            type="number"
+            <Label htmlFor="valor-goleiro">
+              Valor do goleiro
+            </Label>
 
-            placeholder="Valor do goleiro"
 
-            value={valorGoleiro}
+            <Input
 
-            onChange={(e) =>
-              setValorGoleiro(e.target.value)
-            }
+              id="valor-goleiro"
 
-          />
+              type="number"
+
+              placeholder="Valor do goleiro"
+
+              value={valorGoleiro}
+
+              onChange={(e) =>
+                setValorGoleiro(e.target.value)
+              }
+
+            />
+
           </div>
+
 
 
 
@@ -419,9 +558,11 @@ export default function EditarPartida() {
           >
 
             <Save size={18} />
+
             Salvar Alterações
 
           </Button>
+
 
 
 
@@ -435,5 +576,6 @@ export default function EditarPartida() {
     </main>
 
   );
+
 
 }

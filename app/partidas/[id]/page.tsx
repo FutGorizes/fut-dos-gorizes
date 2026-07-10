@@ -13,11 +13,17 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import DeleteGameButton from "@/components/DeleteGameButton";
 import ConfirmPresenceButton from "@/components/ConfirmPresenceButton";
+import RegisterMatchStatsButton from "@/components/RegisterMatchStatsButton";
 
 import { createClient } from "@/lib/supabase-server";
 
@@ -25,11 +31,16 @@ import { createClient } from "@/lib/supabase-server";
 export const dynamic = "force-dynamic";
 
 
+
 type Presenca = {
 
   id:number;
 
+  jogador_id:number;
+
   jogadores: {
+
+    id:number;
 
     nome:string;
 
@@ -42,7 +53,6 @@ type Presenca = {
   };
 
 };
-
 
 
 
@@ -95,7 +105,6 @@ export default async function PartidaDetalhes({
 
 
 
-
   const {
 
     data:partida,
@@ -124,7 +133,6 @@ export default async function PartidaDetalhes({
 
 
 
-
   if(error || !partida){
 
 
@@ -139,7 +147,6 @@ export default async function PartidaDetalhes({
     );
 
   }
-
 
 
 
@@ -191,15 +198,15 @@ export default async function PartidaDetalhes({
 
 
 
-
   const {
 
     data:{
+
       user
+
     }
 
   } = await supabase.auth.getUser();
-
 
 
 
@@ -216,7 +223,17 @@ export default async function PartidaDetalhes({
   let podeAvaliarPartida = false;
 
 
+  let isAdmin = false;
+
+
+
+
+
+
   const agora = new Date();
+
+
+
 
 
   const inicioPartida = new Date(
@@ -224,6 +241,9 @@ export default async function PartidaDetalhes({
     `${partida.data}T${partida.hora}`
 
   );
+
+
+
 
 
   const finalPartida = new Date(
@@ -237,16 +257,12 @@ export default async function PartidaDetalhes({
   );
 
 
+
+
+
   const partidaConcluida = agora >= finalPartida;
 
-
-
-
-
-
-
-
-  if(user){
+    if(user){
 
 
     const {
@@ -257,7 +273,7 @@ export default async function PartidaDetalhes({
 
       .from("jogadores")
 
-      .select("id")
+      .select("id, admin")
 
       .eq(
 
@@ -275,11 +291,14 @@ export default async function PartidaDetalhes({
 
 
 
-
     if(jogador){
 
 
       jogadorIdLogado = jogador.id;
+
+
+      isAdmin = jogador.admin === true;
+
 
 
 
@@ -320,7 +339,6 @@ export default async function PartidaDetalhes({
 
 
 
-
       jaConfirmado = !!minhaPresenca;
 
 
@@ -336,10 +354,14 @@ export default async function PartidaDetalhes({
 
 
 
+
+
   if(jogadorIdLogado){
 
 
+
     if(partidaConcluida){
+
 
 
       const {
@@ -375,6 +397,7 @@ export default async function PartidaDetalhes({
 
 
 
+
       podeAvaliarPartida = !!participou;
 
 
@@ -383,12 +406,6 @@ export default async function PartidaDetalhes({
 
 
   }
-
-
-
-
-
-
 
 
 
@@ -408,36 +425,49 @@ export default async function PartidaDetalhes({
 
         <CardHeader className="items-center text-center">
 
-        <div className="flex items-center justify-center gap-3">
 
-          <span className="icon-tile">
-
-            <ShieldCheck size={20} />
-
-          </span>
+          <div className="flex items-center justify-center gap-3">
 
 
-
-          <div>
-
-            <p className="page-kicker text-center">
-
-              Detalhes
-
-            </p>
+            <span className="icon-tile">
 
 
-            <CardTitle className="text-center text-4xl font-black">
+              <ShieldCheck size={20} />
 
-              Partida
 
-            </CardTitle>
+            </span>
+
+
+
+
+
+            <div>
+
+
+              <p className="page-kicker text-center">
+
+                Detalhes
+
+              </p>
+
+
+
+
+
+              <CardTitle className="text-center text-4xl font-black">
+
+                Partida
+
+              </CardTitle>
+
+
+
+            </div>
+
 
 
           </div>
 
-
-        </div>
 
 
         </CardHeader>
@@ -453,15 +483,17 @@ export default async function PartidaDetalhes({
 
 
 
-
-
         <div className="text-center space-y-5">
+
+
 
 
 
           <p className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
 
+
             <CalendarDays size={18} className="text-accent" />
+
 
 
             {
@@ -477,8 +509,8 @@ export default async function PartidaDetalhes({
             }
 
 
-          </p>
 
+          </p>
 
 
 
@@ -491,7 +523,9 @@ export default async function PartidaDetalhes({
 
             <Clock size={18} className="text-accent" />
 
+
             Horário: {partida.hora || "Não informado"}
+
 
 
           </p>
@@ -500,8 +534,10 @@ export default async function PartidaDetalhes({
 
 
 
+
           {
             partidaConcluida && (
+
 
               <Badge
 
@@ -519,14 +555,19 @@ export default async function PartidaDetalhes({
                   font-black
                 "
 
+
               >
 
+
                 <CheckCircle size={18} />
+
 
                 Partida concluída
 
 
+
               </Badge>
+
 
             )
           }
@@ -536,10 +577,8 @@ export default async function PartidaDetalhes({
 
 
 
-
-
-
           {
+
             partida.valor_goleiro
 
             &&
@@ -547,6 +586,7 @@ export default async function PartidaDetalhes({
             (
 
               <div className="mt-4 rounded-lg border border-accent/30 bg-secondary/70 p-4 text-left">
+
 
 
                 <h2 className="mb-2 flex items-center gap-2 text-xl font-black">
@@ -558,10 +598,8 @@ export default async function PartidaDetalhes({
                   Pagamento do goleiro
 
 
+
                 </h2>
-
-
-
 
 
 
@@ -577,9 +615,6 @@ export default async function PartidaDetalhes({
 
 
 
-
-
-
                 {
 
                   partida.pix_goleiro
@@ -588,11 +623,13 @@ export default async function PartidaDetalhes({
 
                   (
 
+
                     <p>
 
                       Pix: {partida.pix_goleiro}
 
                     </p>
+
 
                   )
 
@@ -602,20 +639,10 @@ export default async function PartidaDetalhes({
 
               </div>
 
+
             )
 
           }
-
-
-
-
-
-
-
-
-
-
-
 
           <div>
 
@@ -625,9 +652,6 @@ export default async function PartidaDetalhes({
               {partida.time_a}
 
             </p>
-
-
-
 
 
 
@@ -646,8 +670,6 @@ export default async function PartidaDetalhes({
 
 
 
-
-
             <p className="text-2xl font-black">
 
               {partida.time_b}
@@ -655,11 +677,14 @@ export default async function PartidaDetalhes({
             </p>
 
 
+
           </div>
 
 
-        </div>
 
+
+
+        </div>
 
 
 
@@ -671,11 +696,19 @@ export default async function PartidaDetalhes({
         <div>
 
 
-<ConfirmPresenceButton
-  partidaId={partida.id}
-  jaConfirmado={jaConfirmado}
-  partidaConcluida={partidaConcluida}
-/>
+          <ConfirmPresenceButton
+
+
+            partidaId={partida.id}
+
+
+            jaConfirmado={jaConfirmado}
+
+
+            partidaConcluida={partidaConcluida}
+
+
+          />
 
 
         </div>
@@ -687,61 +720,79 @@ export default async function PartidaDetalhes({
 
 
         {
+
           podeAvaliarPartida && (
+
+
 
             <div>
 
 
+
               <Button
 
+
                 className="
-
                   h-12
-
                   w-full
-
                   bg-accent
-
                   text-accent-foreground
-
                   font-black
-
                 "
+
+
 
                 render={
 
+
                   <Link
+
 
                     href={`/partidas/${partida.id}/avaliar`}
 
-                    className="flex h-full w-full items-center justify-center gap-2"
+
+
+                    className="
+                      flex
+                      h-full
+                      w-full
+                      items-center
+                      justify-center
+                      gap-2
+                    "
+
+
 
                   />
 
+
+
                 }
 
+
               >
+
 
 
                 <Star size={20}/>
 
 
+
                 Avaliar jogadores
+
 
 
               </Button>
 
 
+
             </div>
 
+
+
           )
+
         }
-
-
-
-
-
-
 
 
 
@@ -756,7 +807,46 @@ export default async function PartidaDetalhes({
 
 
 
+        {
+
+          isAdmin && partidaConcluida && (
+
+
+
+            <div>
+
+
+              <RegisterMatchStatsButton
+
+
+                partidaId={partida.id}
+
+
+                jogadores={presencas as Presenca[]}
+
+
+
+              />
+
+
+            </div>
+
+
+
+          )
+
+
+        }
+
+
+
+
+
+
+
         <div>
+
+
 
 
 
@@ -769,19 +859,19 @@ export default async function PartidaDetalhes({
             Confirmados
 
 
+
             <Badge variant="secondary" className="rounded-lg">
 
 
               {presencas?.length ?? 0}/14
 
 
+
             </Badge>
 
 
+
           </h2>
-
-
-
 
 
 
@@ -792,20 +882,30 @@ export default async function PartidaDetalhes({
 
 
 
+
             {
 
               (presencas as Presenca[] | null)?.map((presenca)=>(
 
 
+
                 <Card
+
 
                   key={presenca.id}
 
+
                   className="bg-secondary/60"
+
+
 
                 >
 
+
+
                   <CardContent className="p-4">
+
+
 
 
 
@@ -818,8 +918,8 @@ export default async function PartidaDetalhes({
                       {presenca.jogadores.nome}
 
 
-                    </p>
 
+                    </p>
 
 
 
@@ -836,9 +936,8 @@ export default async function PartidaDetalhes({
                       Overall: {presenca.jogadores.overall ?? 0}
 
 
+
                     </p>
-
-
 
 
 
@@ -851,6 +950,9 @@ export default async function PartidaDetalhes({
                       {presenca.jogadores.posicao ?? "Sem posição"}
 
 
+
+
+
                       {
 
 
@@ -861,32 +963,39 @@ export default async function PartidaDetalhes({
                         ` | ${presenca.jogadores.posicao_secundaria}`
 
 
+
                       }
+
 
 
                     </p>
 
 
 
+
+
                   </CardContent>
+
 
                 </Card>
 
 
+
               ))
 
+
+
             }
+
+
 
 
 
           </div>
 
 
+
         </div>
-
-
-
-
 
 
 
@@ -895,67 +1004,156 @@ export default async function PartidaDetalhes({
         <Separator />
 
 
+        {
+
+
+          isAdmin && (
+
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+
+
+
+
+
+              <div className="flex-1">
+
+
+
+
+
+                <Button
+
+
+
+                  className="
+                    h-12
+                    w-full
+                    cursor-pointer
+                    font-black
+                  "
+
+
+
+
+
+                  render={
+
+
+
+
+
+                    <Link
+
+
+
+
+
+                      href={`/partidas/${partida.id}/editar`}
+
+
+
+
+
+                      className="
+                        flex
+                        h-full
+                        w-full
+                        items-center
+                        justify-center
+                        gap-2
+                      "
+
+
+
+
+
+                    />
+
+
+
+
+
+                  }
+
+
+
+
+
+                >
+
+
+
+
+
+                  <Pencil size={18} />
+
+
+
+
+
+                  Editar
+
+
+
+
+
+                </Button>
+
+
+
+
+
+              </div>
 
 
 
 
 
 
-        <div className="flex flex-col gap-3 sm:flex-row">
 
 
-
-          <Button
-
-            className="h-10 flex-1"
-
-            render={
-
-              <Link
-
-                href={`/partidas/${partida.id}/editar`}
-
-                className="flex h-full w-full items-center justify-center"
-
-              />
-
-            }
-
-          >
-
-            <Pencil size={18} />
-
-
-            Editar
-
-
-          </Button>
+              <div className="flex-1">
 
 
 
 
 
-
-
-
-
-          <div className="flex-1">
-
-
-            <DeleteGameButton
-
-              id={partida.id}
-
-            />
-
-
-          </div>
+                <DeleteGameButton
 
 
 
 
 
-        </div>
+                  id={partida.id}
+
+
+
+
+
+                />
+
+
+
+
+
+              </div>
+
+
+
+
+
+            </div>
+
+
+
+
+
+          )
+
+
+
+        }
 
 
 
@@ -966,12 +1164,22 @@ export default async function PartidaDetalhes({
 
         </CardContent>
 
+
+
       </Card>
+
+
+
 
 
     </main>
 
+
+
+
+
   );
+
 
 
 }

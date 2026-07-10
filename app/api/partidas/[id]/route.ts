@@ -47,6 +47,10 @@ export async function GET(
 
 
 
+
+
+
+
 // EDITAR PARTIDA
 export async function PUT(
   request: NextRequest,
@@ -88,6 +92,12 @@ export async function PUT(
 
 
 
+
+
+
+
+
+
 // EXCLUIR PARTIDA
 export async function DELETE(
   request: NextRequest,
@@ -98,6 +108,76 @@ export async function DELETE(
   const { id } = await params;
 
 
+
+  // Buscar usuário autenticado
+
+  const {
+    data: {
+      user
+    }
+  } = await supabase.auth.getUser();
+
+
+
+
+  if (!user) {
+
+    return NextResponse.json(
+      {
+        error: "Usuário não autenticado"
+      },
+      {
+        status: 401
+      }
+    );
+
+  }
+
+
+
+
+
+
+  // Verificar se jogador é admin
+
+  const {
+    data: jogador,
+    error: jogadorError
+  } = await supabase
+    .from("jogadores")
+    .select("admin")
+    .eq("usuario_id", user.id)
+    .single();
+
+
+
+
+
+  if (
+    jogadorError ||
+    !jogador?.admin
+  ) {
+
+
+    return NextResponse.json(
+      {
+        error: "Apenas administradores podem excluir partidas"
+      },
+      {
+        status: 403
+      }
+    );
+
+
+  }
+
+
+
+
+
+
+
+  // Excluir partida
 
   const { error } = await supabase
     .from("partidas")
