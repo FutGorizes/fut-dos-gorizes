@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check, Star, UsersRound } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 
 interface Jogador {
@@ -8,6 +11,10 @@ interface Jogador {
   nome: string;
   overall: number;
 }
+
+type PresencaResponse = {
+  jogadores: Jogador;
+};
 
 
 export default function ConfirmedPlayers({
@@ -33,8 +40,8 @@ export default function ConfirmedPlayers({
       const data = await response.json();
 
 
-      const lista = data.map(
-        (item: any) => item.jogadores
+      const lista = (data as PresencaResponse[]).map(
+        (item) => item.jogadores
       );
 
 
@@ -56,8 +63,12 @@ export default function ConfirmedPlayers({
     <div className="mt-8">
 
 
-      <h2 className="text-xl font-bold mb-4">
-        👥 Confirmados ({jogadores.length}/14)
+      <h2 className="mb-4 flex items-center gap-2 text-xl font-black">
+        <UsersRound size={20} />
+        Confirmados
+        <Badge variant="secondary" className="rounded-lg">
+          {jogadores.length}/14
+        </Badge>
       </h2>
 
 
@@ -77,22 +88,25 @@ export default function ConfirmedPlayers({
 
         {jogadores.map((jogador) => (
 
-          <div
+          <Card
             key={jogador.id}
-            className="bg-zinc-100 rounded-lg p-3 flex justify-between"
+            className="bg-secondary/60"
           >
+            <CardContent className="flex justify-between p-3">
 
-            <span>
-              ✅ {jogador.nome}
+            <span className="flex items-center gap-2 font-semibold">
+              <Check size={16} className="text-accent" />
+              {jogador.nome}
             </span>
 
 
-            <span>
-              ⭐ {jogador.overall}
+            <span className="flex items-center gap-1 font-black">
+              <Star size={15} className="text-accent" />
+              {jogador.overall}
             </span>
 
-
-          </div>
+            </CardContent>
+          </Card>
 
         ))}
 

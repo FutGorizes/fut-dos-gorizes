@@ -71,12 +71,14 @@ export async function POST(
 
 
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+
+    const message = error instanceof Error ? error.message : "Erro inesperado";
 
 
     return NextResponse.json(
       {
-        error: error.message
+        error: message
       },
       {
         status: 500

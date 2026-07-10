@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarPlus, Save } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 
 export default function NovaPartida() {
@@ -78,7 +81,7 @@ export default function NovaPartida() {
 
     if (!response.ok) {
 
-      alert("Erro ao criar partida");
+      toast.error("Erro ao criar partida");
 
       setLoading(false);
 
@@ -88,7 +91,7 @@ export default function NovaPartida() {
 
 
 
-    alert("Partida criada com sucesso!");
+    toast.success("Partida criada com sucesso");
 
     router.push("/partidas");
 
@@ -104,15 +107,23 @@ export default function NovaPartida() {
 
   return (
 
-    <main className="min-h-screen bg-zinc-100 flex items-center justify-center p-8">
+    <main className="app-page flex items-center justify-center">
 
 
-      <Card className="w-full max-w-xl p-8">
+      <Card className="surface-card w-full max-w-xl p-8">
 
 
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          ⚽ Nova Partida
-        </h1>
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <span className="icon-tile">
+            <CalendarPlus size={20} />
+          </span>
+          <div>
+            <p className="page-kicker">Agenda</p>
+            <h1 className="text-3xl font-black">
+              Nova Partida
+            </h1>
+          </div>
+        </div>
 
 
 
@@ -121,7 +132,10 @@ export default function NovaPartida() {
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="data">Data</Label>
           <Input
+            id="data"
 
             type="date"
 
@@ -132,10 +146,14 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="hora">Horário</Label>
           <Input
+            id="hora"
 
             type="time"
 
@@ -146,12 +164,16 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="local">Local</Label>
           <Input
+            id="local"
 
-            placeholder="📍 Local da partida"
+            placeholder="Local da partida"
 
             value={local}
 
@@ -160,10 +182,14 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="time-a">Time A</Label>
           <Input
+            id="time-a"
 
             placeholder="Time A"
 
@@ -174,10 +200,14 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="time-b">Time B</Label>
           <Input
+            id="time-b"
 
             placeholder="Time B"
 
@@ -188,13 +218,17 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
           <div className="grid grid-cols-2 gap-4">
 
 
+            <div className="field-stack">
+            <Label htmlFor="gols-a">Gols A</Label>
             <Input
+              id="gols-a"
 
               type="number"
 
@@ -205,10 +239,14 @@ export default function NovaPartida() {
               }
 
             />
+            </div>
 
 
 
+            <div className="field-stack">
+            <Label htmlFor="gols-b">Gols B</Label>
             <Input
+              id="gols-b"
 
               type="number"
 
@@ -219,6 +257,7 @@ export default function NovaPartida() {
               }
 
             />
+            </div>
 
 
           </div>
@@ -227,9 +266,12 @@ export default function NovaPartida() {
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="pix-goleiro">Pix do goleiro</Label>
           <Input
+            id="pix-goleiro"
 
-            placeholder="💳 Pix do goleiro"
+            placeholder="Pix do goleiro"
 
             value={pixGoleiro}
 
@@ -238,16 +280,20 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="valor-goleiro">Valor do goleiro</Label>
           <Input
+            id="valor-goleiro"
 
             type="number"
 
-            placeholder="💰 Valor do goleiro"
+            placeholder="Valor do goleiro"
 
             value={valorGoleiro}
 
@@ -256,6 +302,7 @@ export default function NovaPartida() {
             }
 
           />
+          </div>
 
 
 
@@ -263,7 +310,7 @@ export default function NovaPartida() {
 
           <Button
 
-            className="w-full cursor-pointer"
+            className="h-10 w-full cursor-pointer"
 
             onClick={criarPartida}
 
@@ -273,7 +320,12 @@ export default function NovaPartida() {
 
             {loading
               ? "Criando..."
-              : "⚽ Criar Partida"
+              : (
+                <>
+                  <Save size={18} />
+                  Criar Partida
+                </>
+              )
             }
 
           </Button>

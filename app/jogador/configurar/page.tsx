@@ -3,10 +3,40 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import {
+  Camera,
+  Dumbbell,
+  Flame,
+  Goal,
+  Save,
+  Shield,
+  Target,
+  UserRound,
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const posicoes = [
+  { value: "GOL", label: "Goleiro" },
+  { value: "ZAG", label: "Zagueiro" },
+  { value: "LE", label: "Lateral Esquerdo" },
+  { value: "LD", label: "Lateral Direito" },
+  { value: "MC", label: "Meio Campo" },
+  { value: "CA", label: "Centroavante" },
+];
 
 
 export default function ConfigurarJogador() {
@@ -241,9 +271,7 @@ export default function ConfigurarJogador() {
 
     if(error){
 
-      alert(
-        "Erro ao enviar foto: " + error.message
-      );
+      toast.error("Erro ao enviar foto: " + error.message);
 
       return fotoUrl;
 
@@ -304,7 +332,7 @@ export default function ConfigurarJogador() {
 
     if(error){
 
-      alert(error.message);
+      toast.error(error.message);
 
       return;
 
@@ -312,9 +340,7 @@ export default function ConfigurarJogador() {
 
 
 
-    alert(
-      `Jogador atualizado! Overall: ${overall}`
-    );
+    toast.success(`Jogador atualizado. Overall: ${overall}`);
 
 
     router.push("/");
@@ -331,349 +357,180 @@ export default function ConfigurarJogador() {
   if(loading){
 
     return (
-      <main className="p-8">
-        Carregando...
+      <main className="app-page">
+        <div className="content-shell text-muted-foreground">
+          Carregando...
+        </div>
       </main>
     )
 
   }
 
-
-
-
-
-
+  const attributeFields = [
+    {
+      id: "chute",
+      label: "Chute",
+      icon: Goal,
+      value: chute,
+      setValue: setChute,
+    },
+    {
+      id: "passe",
+      label: "Passe",
+      icon: Target,
+      value: passe,
+      setValue: setPasse,
+    },
+    {
+      id: "drible",
+      label: "Drible",
+      icon: Flame,
+      value: drible,
+      setValue: setDrible,
+    },
+    {
+      id: "marcacao",
+      label: "Marcação",
+      icon: Shield,
+      value: marcacao,
+      setValue: setMarcacao,
+    },
+    {
+      id: "fisico",
+      label: "Físico",
+      icon: Dumbbell,
+      value: fisico,
+      setValue: setFisico,
+    },
+  ];
 
   return (
-
-    <main className="min-h-screen bg-zinc-100 p-8 flex justify-center">
-
-
-      <Card className="w-full max-w-xl p-8">
-
-
-        <h1 className="text-3xl font-bold mb-6">
-          ⚽ Configurar Jogador
-        </h1>
-
-
-
-
-        <div className="flex flex-col items-center mb-6">
-
-
-          {
-            fotoUrl
-            ?
-
-            <img
-
-              src={fotoUrl}
-
-              alt="Foto do jogador"
-
-              className="
-                w-32
-                h-32
-                rounded-full
-                object-cover
-                mb-4
-              "
-
-            />
-
-            :
-
-            <div
-
-              className="
-                w-32
-                h-32
-                rounded-full
-                bg-zinc-300
-                flex
-                items-center
-                justify-center
-                text-4xl
-                mb-4
-              "
-
-            >
-
-              👤
-
+    <main className="app-page flex justify-center">
+      <Card className="surface-card w-full max-w-xl">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <span className="icon-tile">
+              <UserRound size={20} />
+            </span>
+            <div>
+              <p className="page-kicker">Meu perfil</p>
+              <CardTitle className="font-heading text-3xl font-black">
+                Configurar Jogador
+              </CardTitle>
             </div>
+          </div>
+        </CardHeader>
 
-          }
+        <CardContent className="space-y-6">
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="size-32 rounded-lg after:rounded-lg">
+              {fotoUrl && (
+                <AvatarImage
+                  src={fotoUrl}
+                  alt="Foto do jogador"
+                  className="rounded-lg"
+                />
+              )}
+              <AvatarFallback className="rounded-lg bg-secondary text-muted-foreground">
+                <UserRound size={42} />
+              </AvatarFallback>
+            </Avatar>
 
-
-
-
-<label
-  className="
-    cursor-pointer
-    bg-zinc-200
-    hover:bg-zinc-300
-    rounded-lg
-    px-4
-    py-2
-    font-semibold
-    transition
-  "
->
-
-  📷 Escolher arquivo
-
-
-  <input
-
-    type="file"
-
-    accept="image/*"
-
-    className="hidden"
-
-    onChange={(e)=>{
-
-      const arquivo =
-        e.target.files?.[0];
-
-
-      if(arquivo){
-
-        setArquivoFoto(arquivo);
-
-
-        setFotoUrl(
-          URL.createObjectURL(arquivo)
-        );
-
-      }
-
-    }}
-
-  />
-
-
-</label>
-
-
-        </div>
-
-
-
-
-
-        <div className="bg-green-700 text-white rounded-lg p-4 mb-6 text-center">
-
-          <p className="text-sm">
-            Overall
-          </p>
-
-          <p className="text-5xl font-bold">
-            {overall}
-          </p>
-
-        </div>
-
-
-
-
-
-        <div className="space-y-4">
-
-
-
-          <div>
-            <label className="font-semibold">
-              ⚽ Chute
-            </label>
-
+            <Label
+              htmlFor="foto"
+              className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-4 font-semibold transition hover:border-accent/60"
+            >
+              <Camera size={16} />
+              Escolher arquivo
+            </Label>
             <Input
-              type="number"
-              value={chute}
-              onChange={(e)=>
-                setChute(Number(e.target.value))
-              }
+              id="foto"
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e)=>{
+                const arquivo = e.target.files?.[0];
+
+                if(arquivo){
+                  setArquivoFoto(arquivo);
+                  setFotoUrl(URL.createObjectURL(arquivo));
+                }
+              }}
             />
           </div>
 
-
-
-
-          <div>
-            <label className="font-semibold">
-              🎯 Passe
-            </label>
-
-            <Input
-              type="number"
-              value={passe}
-              onChange={(e)=>
-                setPasse(Number(e.target.value))
-              }
-            />
+          <div className="rounded-lg border border-accent/40 bg-[#111111] p-4 text-center text-white">
+            <p className="text-sm text-white/60">Overall</p>
+            <Badge className="mt-2 h-auto rounded-lg bg-accent px-4 py-2 text-5xl font-black text-accent-foreground hover:bg-accent">
+              {overall}
+            </Badge>
           </div>
 
+          <div className="form-grid">
+            {attributeFields.map((field) => {
+              const Icon = field.icon;
 
-
-
-          <div>
-            <label className="font-semibold">
-              🔥 Drible
-            </label>
-
-            <Input
-              type="number"
-              value={drible}
-              onChange={(e)=>
-                setDrible(Number(e.target.value))
-              }
-            />
+              return (
+                <div className="field-stack" key={field.id}>
+                  <Label htmlFor={field.id}>
+                    <Icon size={16} className="text-accent" />
+                    {field.label}
+                  </Label>
+                  <Input
+                    id={field.id}
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={field.value}
+                    onChange={(e)=> field.setValue(Number(e.target.value))}
+                  />
+                </div>
+              );
+            })}
           </div>
 
-
-
-
-          <div>
-            <label className="font-semibold">
-              🛡️ Marcação
-            </label>
-
-            <Input
-              type="number"
-              value={marcacao}
-              onChange={(e)=>
-                setMarcacao(Number(e.target.value))
-              }
-            />
+          <div className="field-stack">
+            <Label>Posição principal</Label>
+            <Select value={posicao || null} onValueChange={(value) => setPosicao(value ?? "")}>
+              <SelectTrigger className="h-10 w-full bg-card">
+                <SelectValue placeholder="Escolha a posição principal" />
+              </SelectTrigger>
+              <SelectContent>
+                {posicoes.map((posicaoItem) => (
+                  <SelectItem key={posicaoItem.value} value={posicaoItem.value}>
+                    {posicaoItem.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-
-
-
-          <div>
-            <label className="font-semibold">
-              💪 Físico
-            </label>
-
-            <Input
-              type="number"
-              value={fisico}
-              onChange={(e)=>
-                setFisico(Number(e.target.value))
-              }
-            />
+          <div className="field-stack">
+            <Label>Posição secundária</Label>
+            <Select value={posicaoSecundaria || null} onValueChange={(value) => setPosicaoSecundaria(value ?? "")}>
+              <SelectTrigger className="h-10 w-full bg-card">
+                <SelectValue placeholder="Escolha a posição secundária" />
+              </SelectTrigger>
+              <SelectContent>
+                {posicoes.map((posicaoItem) => (
+                  <SelectItem key={posicaoItem.value} value={posicaoItem.value}>
+                    {posicaoItem.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-
-
-
-
-
-          <select
-            className="border rounded-md p-2 w-full"
-            value={posicao}
-            onChange={(e) =>
-              setPosicao(e.target.value)
-            }
-          >
-
-            <option value="">
-              Escolha a posição principal
-            </option>
-
-            <option value="GOL">
-              🧤 Goleiro
-            </option>
-
-            <option value="ZAG">
-              🛡️ Zagueiro
-            </option>
-
-            <option value="LE">
-              🏃 Lateral Esquerdo
-            </option>
-
-            <option value="LD">
-              🏃 Lateral Direito
-            </option>
-
-            <option value="MC">
-              🎯 Meio Campo
-            </option>
-
-            <option value="CA">
-              ⚽ Centroavante
-            </option>
-
-          </select>
-
-
-
-
-
-
-          <select
-            className="border rounded-md p-2 w-full"
-            value={posicaoSecundaria}
-            onChange={(e) =>
-              setPosicaoSecundaria(e.target.value)
-            }
-          >
-
-            <option value="">
-              Escolha a posição secundária
-            </option>
-
-            <option value="GOL">
-              🧤 Goleiro
-            </option>
-
-            <option value="ZAG">
-              🛡️ Zagueiro
-            </option>
-
-            <option value="LE">
-              🏃 Lateral Esquerdo
-            </option>
-
-            <option value="LD">
-              🏃 Lateral Direito
-            </option>
-
-            <option value="MC">
-              🎯 Meio Campo
-            </option>
-
-            <option value="CA">
-              ⚽ Centroavante
-            </option>
-
-          </select>
-
-
-
-
-
 
           <Button
-            className="w-full cursor-pointer"
+            className="h-10 w-full cursor-pointer"
             onClick={salvar}
           >
-            💾 Salvar Jogador
+            <Save size={18} />
+            Salvar Jogador
           </Button>
-
-
-
-
-        </div>
-
-
+        </CardContent>
       </Card>
-
-
     </main>
-
   );
 
 }

@@ -7,7 +7,7 @@ export async function middleware(
 ) {
 
 
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request,
   });
 

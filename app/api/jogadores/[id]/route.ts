@@ -41,12 +41,14 @@ export async function GET(
 
     return NextResponse.json(data);
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("🔥 Erro GET:", err);
+
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,
@@ -102,12 +104,14 @@ export async function PUT(
 
     return NextResponse.json(data);
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("🔥 Erro PUT:", err);
+
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,
@@ -162,12 +166,14 @@ export async function DELETE(
       jogador: data,
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("🔥 Erro DELETE:", err);
+
+    const message = err instanceof Error ? err.message : "Erro inesperado";
 
     return NextResponse.json(
       {
-        error: err.message,
+        error: message,
       },
       {
         status: 500,

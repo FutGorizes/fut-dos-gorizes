@@ -1,6 +1,18 @@
 import Link from "next/link";
+import {
+  CalendarDays,
+  Clock,
+  Pencil,
+  ShieldCheck,
+  Star,
+  UsersRound,
+  Wallet,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 import DeleteGameButton from "@/components/DeleteGameButton";
 import ConfirmPresenceButton from "@/components/ConfirmPresenceButton";
@@ -9,6 +21,16 @@ import { createClient } from "@/lib/supabase-server";
 
 
 export const dynamic = "force-dynamic";
+
+type Presenca = {
+  id: number;
+  jogadores: {
+    nome: string;
+    overall: number | null;
+    posicao: string | null;
+    posicao_secundaria: string | null;
+  };
+};
 
 
 
@@ -38,7 +60,7 @@ export default async function PartidaDetalhes({
 
     return (
 
-      <main className="p-8">
+      <main className="app-page">
 
         Partida inválida
 
@@ -83,7 +105,7 @@ export default async function PartidaDetalhes({
 
     return (
 
-      <main className="p-8">
+      <main className="app-page">
 
         Partida não encontrada
 
@@ -242,18 +264,30 @@ export default async function PartidaDetalhes({
 
   return (
 
-    <main className="min-h-screen bg-zinc-100 p-8">
+    <main className="app-page">
 
 
-      <div className="max-w-xl mx-auto bg-white rounded-xl p-8 shadow">
+      <Card className="surface-card mx-auto max-w-xl">
 
 
 
-        <h1 className="text-4xl font-bold text-center mb-8">
+        <CardHeader className="items-center text-center">
+        <div className="flex items-center justify-center gap-3">
+          <span className="icon-tile">
+            <ShieldCheck size={20} />
+          </span>
 
-          ⚽ Partida
+          <div>
+            <p className="page-kicker text-center">Detalhes</p>
+            <CardTitle className="text-center text-4xl font-black">
+              Partida
+            </CardTitle>
+          </div>
 
-        </h1>
+        </div>
+        </CardHeader>
+
+        <CardContent className="space-y-8">
 
 
 
@@ -265,9 +299,9 @@ export default async function PartidaDetalhes({
 
 
 
-          <p className="text-lg">
+          <p className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
 
-            📅 Data:{" "}
+            <CalendarDays size={18} className="text-accent" />
 
             {
 
@@ -284,9 +318,10 @@ export default async function PartidaDetalhes({
 
 
 
-          <p className="text-lg">
+          <p className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
 
-            ⏰ Horário: {partida.hora || "Não informado"}
+            <Clock size={18} className="text-accent" />
+            Horário: {partida.hora || "Não informado"}
 
           </p>
 
@@ -301,12 +336,13 @@ export default async function PartidaDetalhes({
             &&
             (
 
-              <div className="bg-green-100 rounded-lg p-4 mt-4 text-left">
+              <div className="mt-4 rounded-lg border border-accent/30 bg-secondary/70 p-4 text-left">
 
 
-                <h2 className="font-bold text-xl mb-2">
+                <h2 className="mb-2 flex items-center gap-2 text-xl font-black">
 
-                  🥅 Pagamento do goleiro
+                  <Wallet size={20} className="text-accent" />
+                  Pagamento do goleiro
 
                 </h2>
 
@@ -314,7 +350,7 @@ export default async function PartidaDetalhes({
 
                 <p>
 
-                  💰 Valor: R$ {partida.valor_goleiro}
+                  Valor: R$ {partida.valor_goleiro}
 
                 </p>
 
@@ -327,7 +363,7 @@ export default async function PartidaDetalhes({
 
                     <p>
 
-                      💳 Pix: {partida.pix_goleiro}
+                      Pix: {partida.pix_goleiro}
 
                     </p>
 
@@ -351,9 +387,9 @@ export default async function PartidaDetalhes({
           <div>
 
 
-            <p className="text-2xl font-bold">
+            <p className="text-2xl font-black">
 
-              🟢 {partida.time_a}
+              {partida.time_a}
 
             </p>
 
@@ -361,7 +397,7 @@ export default async function PartidaDetalhes({
 
 
 
-            <p className="text-5xl font-bold my-4">
+            <p className="my-4 rounded-lg border border-border bg-secondary/70 py-4 text-5xl font-black">
 
               {partida.gols_a} x {partida.gols_b}
 
@@ -371,9 +407,9 @@ export default async function PartidaDetalhes({
 
 
 
-            <p className="text-2xl font-bold">
+            <p className="text-2xl font-black">
 
-              🟡 {partida.time_b}
+              {partida.time_b}
 
             </p>
 
@@ -391,7 +427,7 @@ export default async function PartidaDetalhes({
 
 
 
-        <div className="mt-8">
+        <div>
 
 
           <ConfirmPresenceButton
@@ -413,13 +449,19 @@ export default async function PartidaDetalhes({
 
 
 
-        <div className="mt-8">
+        <Separator />
+
+        <div>
 
 
 
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="mb-4 flex items-center gap-2 text-2xl font-black">
 
-            👥 Confirmados ({presencas?.length ?? 0}/14)
+            <UsersRound size={22} />
+            Confirmados
+            <Badge variant="secondary" className="rounded-lg">
+              {presencas?.length ?? 0}/14
+            </Badge>
 
           </h2>
 
@@ -435,40 +477,43 @@ export default async function PartidaDetalhes({
 
             {
 
-              presencas?.map((presenca:any)=>(
+              (presencas as Presenca[] | null)?.map((presenca)=>(
 
 
-                <div
+                <Card
 
                   key={presenca.id}
 
-                  className="bg-zinc-100 rounded-lg p-4"
+                  className="bg-secondary/60"
 
                 >
+                  <CardContent className="p-4">
 
 
 
-                  <p className="font-bold text-lg">
+                  <p className="flex items-center gap-2 text-lg font-black">
 
-                    ✅ {presenca.jogadores.nome}
-
-                  </p>
-
-
-
-
-                  <p>
-
-                    ⭐ Overall: {presenca.jogadores.overall ?? 0}
+                    <ShieldCheck size={18} className="text-accent" />
+                    {presenca.jogadores.nome}
 
                   </p>
 
 
 
 
-                  <p>
+                  <p className="mt-2 flex items-center gap-2 text-muted-foreground">
 
-                    ⚽ {presenca.jogadores.posicao ?? "Sem posição"}
+                    <Star size={16} className="text-accent" />
+                    Overall: {presenca.jogadores.overall ?? 0}
+
+                  </p>
+
+
+
+
+                  <p className="text-muted-foreground">
+
+                    {presenca.jogadores.posicao ?? "Sem posição"}
 
                     {
                       presenca.jogadores.posicao_secundaria
@@ -480,7 +525,8 @@ export default async function PartidaDetalhes({
 
 
 
-                </div>
+                  </CardContent>
+                </Card>
 
 
               ))
@@ -502,20 +548,23 @@ export default async function PartidaDetalhes({
 
 
 
-        <div className="flex gap-4 mt-8 items-stretch">
+        <Separator />
+
+        <div className="flex flex-col gap-3 sm:flex-row">
 
 
 
           <Button
-            className="flex-1 h-full"
+            className="h-10 flex-1"
             render={
               <Link
                 href={`/partidas/${partida.id}/editar`}
-                className="w-full h-full flex justify-center items-center"
+                className="flex h-full w-full items-center justify-center"
               />
             }
           >
-            ✏️ Editar
+            <Pencil size={18} />
+            Editar
           </Button>
 
 
@@ -547,7 +596,8 @@ export default async function PartidaDetalhes({
 
 
 
-      </div>
+        </CardContent>
+      </Card>
 
 
     </main>

@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Pencil, Save } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 
 export default function EditarPartida() {
@@ -46,7 +49,7 @@ export default function EditarPartida() {
 
       if (!response.ok) {
 
-        alert("Erro ao buscar partida");
+        toast.error("Erro ao buscar partida");
         return;
 
       }
@@ -140,14 +143,14 @@ export default function EditarPartida() {
 
     if (!response.ok) {
 
-      alert("Erro ao editar partida");
+      toast.error("Erro ao editar partida");
       return;
 
     }
 
 
 
-    alert("Partida atualizada!");
+    toast.success("Partida atualizada");
 
     router.push(`/partidas/${id}`);
 
@@ -166,7 +169,7 @@ export default function EditarPartida() {
 
     return (
 
-      <main className="p-8">
+      <main className="app-page">
         Carregando...
       </main>
 
@@ -182,15 +185,23 @@ export default function EditarPartida() {
 
   return (
 
-    <main className="min-h-screen bg-zinc-100 flex items-center justify-center p-8">
+    <main className="app-page flex items-center justify-center">
 
 
-      <Card className="w-full max-w-xl p-8">
+      <Card className="surface-card w-full max-w-xl p-8">
 
 
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          ✏️ Editar Partida
-        </h1>
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <span className="icon-tile">
+            <Pencil size={20} />
+          </span>
+          <div>
+            <p className="page-kicker">Agenda</p>
+            <h1 className="text-3xl font-black">
+              Editar Partida
+            </h1>
+          </div>
+        </div>
 
 
 
@@ -200,7 +211,10 @@ export default function EditarPartida() {
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="data">Data</Label>
           <Input
+            id="data"
 
             type="date"
 
@@ -211,12 +225,16 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="hora">Horário</Label>
           <Input
+            id="hora"
 
             type="time"
 
@@ -227,15 +245,19 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="local">Local</Label>
           <Input
+            id="local"
 
-            placeholder="📍 Local da partida"
+            placeholder="Local da partida"
 
             value={local}
 
@@ -244,13 +266,17 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="time-a">Time A</Label>
           <Input
+            id="time-a"
 
             placeholder="Time A"
 
@@ -261,13 +287,17 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="time-b">Time B</Label>
           <Input
+            id="time-b"
 
             placeholder="Time B"
 
@@ -278,6 +308,7 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
@@ -288,7 +319,10 @@ export default function EditarPartida() {
 
 
 
+            <div className="field-stack">
+            <Label htmlFor="gols-a">Gols A</Label>
             <Input
+              id="gols-a"
 
               type="number"
 
@@ -299,12 +333,16 @@ export default function EditarPartida() {
               }
 
             />
+            </div>
 
 
 
 
 
+            <div className="field-stack">
+            <Label htmlFor="gols-b">Gols B</Label>
             <Input
+              id="gols-b"
 
               type="number"
 
@@ -315,6 +353,7 @@ export default function EditarPartida() {
               }
 
             />
+            </div>
 
 
 
@@ -326,9 +365,12 @@ export default function EditarPartida() {
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="pix-goleiro">Pix do goleiro</Label>
           <Input
+            id="pix-goleiro"
 
-            placeholder="💳 Pix do goleiro"
+            placeholder="Pix do goleiro"
 
             value={pixGoleiro}
 
@@ -337,17 +379,21 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
 
 
 
+          <div className="field-stack">
+          <Label htmlFor="valor-goleiro">Valor do goleiro</Label>
           <Input
+            id="valor-goleiro"
 
             type="number"
 
-            placeholder="💰 Valor do goleiro"
+            placeholder="Valor do goleiro"
 
             value={valorGoleiro}
 
@@ -356,6 +402,7 @@ export default function EditarPartida() {
             }
 
           />
+          </div>
 
 
 
@@ -365,16 +412,14 @@ export default function EditarPartida() {
 
           <Button
 
-            className="
-              w-full
-              cursor-pointer
-            "
+            className="h-10 w-full cursor-pointer"
 
             onClick={salvarAlteracao}
 
           >
 
-            💾 Salvar Alterações
+            <Save size={18} />
+            Salvar Alterações
 
           </Button>
 

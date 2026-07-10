@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { Dumbbell, Goal, Pencil, Star, Target, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 import DeletePlayerButton from "@/components/DeletePlayerButton";
 
@@ -27,7 +32,7 @@ export default async function PerfilJogador({
 
     return (
 
-      <main className="p-8">
+      <main className="app-page">
 
         Jogador inválido
 
@@ -58,7 +63,7 @@ export default async function PerfilJogador({
 
     return (
 
-      <main className="p-8">
+      <main className="app-page">
 
         Jogador não encontrado
 
@@ -130,73 +135,71 @@ export default async function PerfilJogador({
 
   return (
 
-    <main className="min-h-screen bg-zinc-100 p-8">
+    <main className="app-page">
 
 
-      <div className="max-w-xl mx-auto bg-white rounded-xl p-8 shadow">
+      <Card className="surface-card mx-auto max-w-xl">
+        <CardHeader className="items-center text-center">
+          <Avatar className="mb-2 size-32 rounded-lg after:rounded-lg">
+            {player.foto_url && (
+              <AvatarImage
+                src={player.foto_url}
+                alt={player.nome}
+                className="rounded-lg"
+              />
+            )}
+            <AvatarFallback className="rounded-lg bg-secondary text-muted-foreground">
+              <UserRound size={44} />
+            </AvatarFallback>
+          </Avatar>
+
+          <CardTitle className="font-heading text-4xl font-black">
+            {player.nome}
+          </CardTitle>
+          <Badge className="mt-2 h-8 gap-2 rounded-lg bg-accent px-3 text-sm font-black text-accent-foreground hover:bg-accent">
+            <Star size={16} />
+            Overall {player.overall}
+          </Badge>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+        <div className="space-y-4 text-sm text-muted-foreground">
 
 
-
-        <h1 className="text-4xl font-bold mb-6">
-
-          {player.nome}
-
-        </h1>
-
-
-
-
-
-        {
-          player.foto_url
-          &&
-
-          <img
-
-            src={player.foto_url}
-
-            alt={player.nome}
-
-            className="
-              w-32
-              h-32
-              rounded-full
-              object-cover
-              mx-auto
-              mb-6
-            "
-
-          />
-
-        }
-
-
-
-
-
-
-
-        <div className="space-y-3 text-lg">
-
-
-          <p>
-            ⭐ Overall: {player.overall}
+          <div className="grid gap-2">
+          <p className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2">
+            <Goal size={18} className="text-accent" />
+            Chute
+            </span>
+            <strong className="text-foreground">{player.chute}</strong>
           </p>
+          <Progress value={player.chute} className="[&_[data-slot=progress-indicator]]:bg-accent" />
+          </div>
 
 
-          <p>
-            ⚽ Chute: {player.chute}
+          <div className="grid gap-2">
+          <p className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2">
+            <Target size={18} className="text-accent" />
+            Passe
+            </span>
+            <strong className="text-foreground">{player.passe}</strong>
           </p>
+          <Progress value={player.passe} className="[&_[data-slot=progress-indicator]]:bg-accent" />
+          </div>
 
 
-          <p>
-            🎯 Passe: {player.passe}
+          <div className="grid gap-2">
+          <p className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2">
+            <Dumbbell size={18} className="text-accent" />
+            Físico
+            </span>
+            <strong className="text-foreground">{player.fisico}</strong>
           </p>
-
-
-          <p>
-            💪 Físico: {player.fisico}
-          </p>
+          <Progress value={player.fisico} className="[&_[data-slot=progress-indicator]]:bg-accent" />
+          </div>
 
 
 
@@ -215,12 +218,16 @@ export default async function PerfilJogador({
 
           (
 
-            <div className="flex gap-4 mt-8">
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
 
 
-              <Button render={<Link href={`/jogadores/${player.id}/editar`} />}>
+              <Button
+                render={<Link href={`/jogadores/${player.id}/editar`} />}
+                className="h-10 flex-1"
+              >
 
-                ✏️ Editar
+                <Pencil size={18} />
+                Editar
 
               </Button>
 
@@ -245,7 +252,8 @@ export default async function PerfilJogador({
 
 
 
-      </div>
+        </CardContent>
+      </Card>
 
 
     </main>

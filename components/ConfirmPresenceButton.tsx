@@ -3,6 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -71,7 +73,7 @@ export default function ConfirmPresenceButton({
 
       if(!session){
 
-        alert("Usuário não autenticado");
+        toast.error("Usuário não autenticado");
 
         return;
 
@@ -143,7 +145,7 @@ export default function ConfirmPresenceButton({
 
       if(!response.ok){
 
-        alert(data.message || "Erro");
+        toast.error(data.message || "Erro ao alterar presença");
 
         return;
 
@@ -156,6 +158,7 @@ export default function ConfirmPresenceButton({
 
 
       setConfirmado(!confirmado);
+      toast.success(confirmado ? "Presença retirada" : "Presença confirmada");
 
 
 
@@ -171,7 +174,7 @@ export default function ConfirmPresenceButton({
 
       console.log(error);
 
-      alert("Erro de conexão");
+      toast.error("Erro de conexão");
 
     }
 
@@ -197,10 +200,7 @@ export default function ConfirmPresenceButton({
 
     <Button
 
-      className="
-        w-full
-        cursor-pointer
-      "
+      className="h-10 w-full cursor-pointer"
 
       disabled={loading}
 
@@ -208,27 +208,19 @@ export default function ConfirmPresenceButton({
 
     >
 
-      {
-
-        loading
-
-        ?
-
+      {loading ? (
         "Aguarde..."
-
-        :
-
-        confirmado
-
-        ?
-
-        "❌ Retirar presença"
-
-        :
-
-        "✅ Confirmar presença"
-
-      }
+      ) : confirmado ? (
+        <>
+          <X size={18} />
+          Retirar presença
+        </>
+      ) : (
+        <>
+          <Check size={18} />
+          Confirmar presença
+        </>
+      )}
 
 
     </Button>

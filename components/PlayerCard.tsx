@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   User,
   Trophy,
@@ -12,29 +16,35 @@ import {
 import type { Player } from "@/types/player";
 
 
-function Barra({ valor }: { valor: number }) {
-
+function PlayerStat({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Goal;
+  label: string;
+  value: number;
+}) {
   return (
+    <div className="grid gap-2">
+      <div className="flex justify-between">
+        <span className="flex items-center gap-2">
+          <Icon size={18}/>
+          {label}
+        </span>
 
-    <div className="w-full h-2 bg-green-900 rounded-full overflow-hidden">
+        <strong className="text-foreground">
+          {value}
+        </strong>
+      </div>
 
-      <div
-
-        className="h-full bg-yellow-400"
-
-        style={{
-          width: `${valor}%`
-        }}
-
+      <Progress
+        value={value}
+        className="[&_[data-slot=progress-indicator]]:bg-accent"
       />
-
     </div>
-
   );
-
 }
-
-
 
 
 
@@ -56,7 +66,7 @@ export default function PlayerCard({
   return (
 
 
-    <Card className="w-80 bg-gradient-to-br from-green-700 to-green-900 text-white cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-0">
+    <Card className="w-full max-w-sm cursor-pointer border-border/80 bg-card transition-all duration-200 hover:-translate-y-1 hover:border-accent/60 hover:shadow-lg hover:shadow-black/10">
 
 
       <CardContent className="p-6">
@@ -67,55 +77,24 @@ export default function PlayerCard({
 
 
 
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
+            <Avatar className="size-16 rounded-lg after:rounded-lg">
+              {player.foto_url && (
+                <AvatarImage
+                  src={player.foto_url}
+                  alt={player.nome}
+                  className="rounded-lg"
+                />
+              )}
+              <AvatarFallback className="rounded-lg bg-secondary text-foreground">
+                <User size={30}/>
+              </AvatarFallback>
+            </Avatar>
 
-
-            {
-              player.foto_url
-
-              ?
-
-              <img
-
-                src={player.foto_url}
-
-                alt={player.nome}
-
-                className="
-                  w-16
-                  h-16
-                  rounded-full
-                  object-cover
-                  border-2
-                  border-white
-                "
-
-              />
-
-
-              :
-
-
-              <div className="bg-white/20 rounded-full p-3">
-
-                <User size={34}/>
-
-              </div>
-
-            }
-
-
-
-
-            <div className="flex items-center gap-2 bg-yellow-400 text-black px-3 py-1 rounded-full font-bold">
-
-
+            <Badge className="h-8 gap-2 rounded-lg bg-accent px-3 text-sm font-black text-accent-foreground hover:bg-accent">
               <Trophy size={18}/>
-
               {player.overall}
-
-
-            </div>
+            </Badge>
 
 
 
@@ -125,7 +104,7 @@ export default function PlayerCard({
 
 
 
-          <h2 className="text-2xl font-bold text-center mt-5">
+          <h2 className="mt-5 text-center text-2xl font-black tracking-normal">
 
             {player.nome}
 
@@ -136,101 +115,10 @@ export default function PlayerCard({
 
 
 
-          <div className="mt-8 space-y-5">
-
-
-
-            <div>
-
-              <div className="flex justify-between mb-1">
-
-                <span className="flex items-center gap-2">
-
-                  <Goal size={18}/>
-
-                  Chute
-
-                </span>
-
-
-                <strong>
-                  {player.chute}
-                </strong>
-
-
-              </div>
-
-
-              <Barra valor={player.chute}/>
-
-
-            </div>
-
-
-
-
-
-
-            <div>
-
-
-              <div className="flex justify-between mb-1">
-
-
-                <span className="flex items-center gap-2">
-
-                  <Target size={18}/>
-
-                  Passe
-
-                </span>
-
-
-                <strong>
-                  {player.passe}
-                </strong>
-
-
-              </div>
-
-
-              <Barra valor={player.passe}/>
-
-
-            </div>
-
-
-
-
-
-
-            <div>
-
-
-              <div className="flex justify-between mb-1">
-
-
-                <span className="flex items-center gap-2">
-
-                  <Dumbbell size={18}/>
-
-                  Físico
-
-                </span>
-
-
-                <strong>
-                  {player.fisico}
-                </strong>
-
-
-              </div>
-
-
-              <Barra valor={player.fisico}/>
-
-
-            </div>
+          <div className="mt-8 space-y-5 text-sm text-muted-foreground">
+            <PlayerStat icon={Goal} label="Chute" value={player.chute}/>
+            <PlayerStat icon={Target} label="Passe" value={player.passe}/>
+            <PlayerStat icon={Dumbbell} label="Físico" value={player.fisico}/>
 
 
 
@@ -251,27 +139,16 @@ export default function PlayerCard({
           &&
           (
 
-            <Link
-
-              href={`/jogadores/${player.id}/editar`}
-
-              className="mt-8 flex justify-center"
-
-            >
-
-
-              <div className="flex items-center gap-2 bg-white/15 px-4 py-2 rounded-lg hover:bg-white/25">
-
-
+            <div className="mt-8 flex justify-center">
+              <Button
+                variant="secondary"
+                render={<Link href={`/jogadores/${player.id}/editar`} />}
+                className="h-10 px-4"
+              >
                 <Pencil size={18}/>
-
                 Editar jogador
-
-
-              </div>
-
-
-            </Link>
+              </Button>
+            </div>
 
           )
 

@@ -1,9 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
+import { AlertCircle, Save, UserRound } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 
 import type { Player } from "@/types/player"
 
@@ -99,22 +102,33 @@ export default function PlayerForm({
 
   return (
 
-    <Card className="w-full max-w-xl p-8">
+    <Card className="surface-card w-full max-w-xl">
 
 
-      <h1 className="text-3xl font-bold text-center mb-8">
-        ⚽ Jogador
-      </h1>
+      <CardHeader className="items-center text-center">
+        <div className="mb-2 flex items-center justify-center gap-3">
+        <span className="icon-tile">
+          <UserRound size={20} />
+        </span>
+        <div>
+          <p className="page-kicker">Cadastro</p>
+          <CardTitle className="font-heading text-3xl font-black">
+            Jogador
+          </CardTitle>
+        </div>
+      </div>
+      </CardHeader>
 
 
+      <CardContent className="space-y-5">
 
       {erro && (
 
-        <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-5">
-
-          {erro}
-
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Revise os dados</AlertTitle>
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
 
       )}
 
@@ -123,74 +137,78 @@ export default function PlayerForm({
       <div className="space-y-5">
 
 
-        <Input
-
-          placeholder="Nome"
-
-          value={nome}
-
-          onChange={(e) => setNome(e.target.value)}
-
-        />
-
-
-
-        <div className="grid grid-cols-2 gap-4">
-
-
+        <div className="field-stack">
+          <Label htmlFor="nome">Nome</Label>
           <Input
-
-            type="number"
-
-            placeholder="Overall"
-
-            value={overall}
-
-            onChange={(e) => setOverall(e.target.value)}
-
+            id="nome"
+            placeholder="Nome do jogador"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
           />
+        </div>
 
 
 
-          <Input
-
-            type="number"
-
-            placeholder="Chute"
-
-            value={chute}
-
-            onChange={(e) => setChute(e.target.value)}
-
-          />
+        <div className="form-grid">
 
 
-
-          <Input
-
-            type="number"
-
-            placeholder="Passe"
-
-            value={passe}
-
-            onChange={(e) => setPasse(e.target.value)}
-
-          />
+          <div className="field-stack">
+            <Label htmlFor="overall">Overall</Label>
+            <Input
+              id="overall"
+              type="number"
+              min={0}
+              max={100}
+              placeholder="0 a 100"
+              value={overall}
+              onChange={(e) => setOverall(e.target.value)}
+            />
+          </div>
 
 
 
-          <Input
+          <div className="field-stack">
+            <Label htmlFor="chute">Chute</Label>
+            <Input
+              id="chute"
+              type="number"
+              min={0}
+              max={100}
+              placeholder="0 a 100"
+              value={chute}
+              onChange={(e) => setChute(e.target.value)}
+            />
+          </div>
 
-            type="number"
 
-            placeholder="Físico"
 
-            value={fisico}
+          <div className="field-stack">
+            <Label htmlFor="passe">Passe</Label>
+            <Input
+              id="passe"
+              type="number"
+              min={0}
+              max={100}
+              placeholder="0 a 100"
+              value={passe}
+              onChange={(e) => setPasse(e.target.value)}
+            />
+          </div>
 
-            onChange={(e) => setFisico(e.target.value)}
 
-          />
+
+          <div className="field-stack">
+            <Label htmlFor="fisico">Físico</Label>
+            <Input
+              id="fisico"
+              type="number"
+              min={0}
+              max={100}
+              placeholder="0 a 100"
+              value={fisico}
+              onChange={(e) => setFisico(e.target.value)}
+            />
+          </div>
 
 
         </div>
@@ -199,12 +217,13 @@ export default function PlayerForm({
 
         <Button
 
-          className="w-full"
+          className="h-10 w-full"
 
           onClick={handleSubmit}
 
         >
 
+          <Save size={18} />
           {buttonText}
 
         </Button>
@@ -212,6 +231,7 @@ export default function PlayerForm({
 
       </div>
 
+      </CardContent>
 
     </Card>
 

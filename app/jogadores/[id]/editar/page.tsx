@@ -69,7 +69,7 @@ export default function EditarJogador() {
   if (loading) {
 
     return (
-      <main className="p-8">
+      <main className="app-page">
         Carregando...
       </main>
     );
@@ -81,7 +81,7 @@ export default function EditarJogador() {
   if (!player) {
 
     return (
-      <main className="p-8">
+      <main className="app-page">
         Jogador não encontrado.
       </main>
     );
@@ -92,12 +92,12 @@ export default function EditarJogador() {
 
   return (
 
-    <main className="min-h-screen bg-zinc-100 flex justify-center items-center p-8">
+    <main className="app-page flex justify-center items-center">
 
       <PlayerForm
         initialData={player}
         onSubmit={handleSubmit}
-        buttonText="💾 Salvar Alterações"
+        buttonText="Salvar Alterações"
       />
 
     </main>
